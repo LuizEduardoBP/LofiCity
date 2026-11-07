@@ -1,55 +1,57 @@
 # LoFi City
 
-Cenas lo-fi em pixel art que seguem o **horário real** e o **clima ao vivo** de cada cidade. Se está chovendo lá, chove na tela; se é noite lá, é noite aqui. Com duas rádios de músicas reais sob licença Creative Commons.
+Lo-fi pixel-art scenes that follow each city's **real clock** and **live weather**. If it's raining there, it rains on screen; if it's night there, it's night here. Comes with two radio stations playing real music released under Creative Commons.
 
-**Cidades**
+**Live:** https://loficity-lac.vercel.app
 
-- **Tóquio** (padrão): `Esquina da chuva`, `Beco neon`, `Rua do konbini`, `Santuário`. Estações japonesas: sakura, tsuyu, momiji, neve no fim do ano, hanabi.
-- **Esperança · PB** (horário de Brasília): `Praça da Matriz`, com a igreja de Nossa Senhora do Bom Conselho, e `Rua do Comércio`. Calendário local: festa da padroeira em janeiro, São João, Natal.
+**Cities**
 
-Tudo é desenhado por código (sem imagens), num framebuffer indexado com gradação de paleta para dia, noite, pôr do sol e tempo nublado.
+- **Tokyo** (default): `Esquina da chuva` (rain corner), `Beco neon` (neon alley), `Rua do konbini` (konbini street), `Santuário` (shrine). Japanese seasons: sakura, tsuyu, momiji, year-end snow, hanabi.
+- **Esperança, Paraíba, Brazil** (Brasília time): `Praça da Matriz`, the square in front of the Nossa Senhora do Bom Conselho church, and `Rua do Comércio`, the main shopping street. Local calendar: the patron saint's festival in January, São João in June, Christmas.
 
-## Rodar
+Everything is drawn in code, with no image assets: an indexed framebuffer whose palette is graded for day, night, sunset and overcast skies.
+
+## Run
 
 ```bash
 pnpm install
 pnpm dev        # http://localhost:5173
-pnpm build      # dist/index.html, um único arquivo autocontido
-pnpm shot       # capturas em ./shots (precisa de um build)
+pnpm build      # dist/index.html, a single self-contained file
+pnpm shot       # screenshots into ./shots (needs a build)
 ```
 
-## Opções na URL
+## URL options
 
-- `#city=esperanca` ou `#city=tokyo`
-- `#scene=praca-matriz`: fixa um cenário (`praca-matriz`, `rua-comercio`, `rain-corner`, `neon-alley`, `konbini`, `shrine`)
-- `#at=2026-12-24T22:00`: congela um momento no fuso da cidade (para testes; a interface sempre usa a hora real)
-- `#wx=rain`: força o clima (`clear`, `cloudy`, `rain`, `snow`, `storm`, `fog`)
+- `#city=esperanca` or `#city=tokyo`
+- `#scene=praca-matriz`: pin a scene (`praca-matriz`, `rua-comercio`, `rain-corner`, `neon-alley`, `konbini`, `shrine`)
+- `#at=2026-12-24T22:00`: freeze a moment in the city's time zone (for testing; the UI always uses real time)
+- `#wx=rain`: force the weather (`clear`, `cloudy`, `rain`, `snow`, `storm`, `fog`)
 
-## Teclas
+## Keys
 
-T cidade, S cenário, R rádio, N próxima faixa, P estação, M som ambiente, W chuva no vidro, C CRT, L relâmpago, D detalhes, Enter tela cheia.
+T city, S scene, R radio, N next track, P station, M ambient sound, W rain on glass, C CRT, L lightning, D details, Enter fullscreen.
 
-## Estrutura
+## Layout
 
-- `src/engine`: framebuffer indexado, paleta, pós-processamento em WebGL2
-- `src/sky`: cidades, relógio e astronomia, modelos de clima (Japão e Agreste), clima ao vivo, gradação
-- `src/fx`: chuva, neve, pétalas e folhas, relâmpagos, fogos
-- `src/actors`: pedestres, carros e motos, árvores
-- `src/scenes`: passes compartilhados, kit de Esperança (`br-kit.ts`) e um arquivo por cenário
-- `src/audio`: som ambiente generativo e as rádios
+- `src/engine`: indexed framebuffer, palette, WebGL2 post-processing
+- `src/sky`: cities, clock and astronomy, climate models (Japan and Brazil's Agreste), live weather, palette grading
+- `src/fx`: rain, snow, petals and leaves, lightning, fireworks
+- `src/actors`: pedestrians, cars and motorcycles, trees
+- `src/scenes`: shared passes, the Esperança prop kit (`br-kit.ts`) and one file per scene
+- `src/audio`: generative ambience and the radio
 
-## Créditos
+## Credits
 
-- **Clima**: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0). Sem chave; atualiza a cada 10 minutos e cai para o clima simulado se a rede falhar.
-- **Músicas**: transmitidas do [Internet Archive](https://archive.org/), lançadas por seus selos sob licenças Creative Commons. A rádio mostra artista, álbum e licença de cada faixa com link para a página original.
+- **Weather**: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0). No API key; refreshes every 10 minutes and falls back to the simulated climate if the network fails.
+- **Music**: streamed from the [Internet Archive](https://archive.org/), released by their labels under Creative Commons licenses. The radio shows each track's artist, album and license with a link to the original page.
   - Rádio Lo-Fi City: [Dusted Wax Kingdom](https://archive.org/search?query=identifier%3ADWK%2A) (CC BY-NC-ND).
-  - Rádio Vaporwave: lançamentos de netlabels como Enough Records, Section 27, Internet Daemon e outros (CC BY-NC-ND / BY-NC-SA / BY-SA).
-  - As músicas **não** fazem parte deste repositório nem da licença MIT; as licenças NC proíbem uso comercial.
+  - Rádio Vaporwave: releases from netlabels such as Enough Records, Section 27, Internet Daemon and others (CC BY-NC-ND / BY-NC-SA / BY-SA).
+  - The music is **not** part of this repository or its MIT license, and the NC licenses forbid commercial use.
 
-## Privacidade
+## Privacy
 
-O site publicado usa [Vercel Web Analytics](https://vercel.com/docs/analytics) e [Speed Insights](https://vercel.com/docs/speed-insights): sem cookies, só contagem de visitas por cidade (`/tokyo`, `/esperanca`) e métricas de desempenho. Rodando localmente, nada é enviado.
+The hosted site uses [Vercel Web Analytics](https://vercel.com/docs/analytics) and [Speed Insights](https://vercel.com/docs/speed-insights). Both are cookieless and only collect visit counts per city (`/tokyo`, `/esperanca`) and performance metrics. Nothing is sent when running locally.
 
-## Licença
+## License
 
-Código sob [MIT](LICENSE).
+Code under the [MIT](LICENSE) license.
