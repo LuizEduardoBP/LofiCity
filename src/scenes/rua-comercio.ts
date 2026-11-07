@@ -10,13 +10,14 @@ import {
 } from '../engine/palette';
 import { configure, drawFarPrecip, drawNearPrecip, drawRipples, precip } from '../fx/precip';
 import { drawFireworks, drawLightning } from '../fx/sky-events';
+import { drawAnimalsGround, drawAnimalsPerched, drawAnimalsSky, setupAnimals, updateAnimals } from '../actors/animals';
 import { drawPeople, peopleCount, setLanes, tickSpawns, updatePeople } from '../actors/people';
 import { drawCars, setCarLanes, updateCars } from '../actors/cars';
 import { S, hourIn } from '../sky/state';
 import { drawFog, drawSky, drawStreet, type Street } from './common';
 import {
   type Lamp, type Opening, type Plat, bandeirolas, bulbs, cart, casa, christmasStar, drawOpenings, isNight, lampLight,
-  lampPost, pole, text, textW, wire,
+  lampPost, pole, text, textW, wire, wireCurve,
 } from './br-kit';
 import type { Scene } from './types';
 
@@ -52,7 +53,8 @@ function buildFar() {
   // the Matriz tower over the rooftops, far away
   const tx = 300;
   L(far, tx, 52, 12, 50, CHURCH); L(far, tx, 52, 2, 50, CHURCHD); L(far, tx + 10, 52, 2, 50, CHURCHD);
-  L(far, tx - 1, 51, 14, 1, CHURCHD); L(far, tx + 3, 58, 2, 6, VOID); L(far, tx + 7, 58, 2, 6, VOID);
+  L(far, tx - 1, 51, 14, 1, CHURCHD); L(far, tx + 4, 57, 4, 7, VOID); L(far, tx + 4, 57, 1, 1, CHURCH); L(far, tx + 7, 57, 1, 1, CHURCH); // belfry arch
+  L(far, tx + 5, 68, 2, 2, TILEW); // clock
   for (let y = 0; y < 14; y++) { const h = Math.round(6 * (1 - y / 14)); L(far, tx + 6 - h, 50 - y, h * 2, 1, TERRA); }
   L(far, tx + 5, 32, 2, 5, CHURCHD); L(far, tx + 4, 33, 4, 1, CHURCHD);
 }
@@ -153,13 +155,14 @@ function parkedMotos() {
 }
 
 function update(dt: number) {
+  updateAnimals(dt);
   const evening = S.cal.hour >= 17 && S.cal.hour < 22;
   tickSpawns(dt, (S.festa || S.saoJoao) && evening ? 2.2 : 1.2); updatePeople(dt); updateCars(dt, 0.9);
 }
 
 const FOG = [{ y: 104, h: 9, sp: 0.5 }, { y: 140, h: 6, sp: -0.4 }];
 function render() {
-  drawSky(HORIZON); drawLightning();
+  drawSky(HORIZON); drawAnimalsSky(); drawLightning();
   blitLayer(far); drawFireworks();
   blitLayer(mid);
   ROW.forEach((b, i) => drawOpenings(opens[i], openNow(b)));
@@ -170,7 +173,7 @@ function render() {
   if (S.festa || S.saoJoao) { bandeirolas(59, 74, 263, 74, 12, 1); bandeirolas(263, 74, 447, 74, 12, 4); }
   barTables();
   cart(222, 146, S.stallOpen);
-  drawPeople();
+  drawAnimalsPerched(); drawPeople(); drawAnimalsGround();
   drawStreet(street); parkedMotos(); drawCars(); drawRipples(); drawFog(FOG); drawNearPrecip();
 }
 
@@ -181,6 +184,9 @@ export const ruaComercio: Scene = {
   build() {
     if (!built) { buildFar(); buildRow(); buildFront(); buildGround(); built = true; }
     setLanes([{ y: 143 }, { y: 145 }]);
+    setupAnimals({ ground: [143, 145], dogs: 2, sleepSpots: [230, 330], lamps: LAMPS.map((l) => ({ x: l.x + 14, y: l.top })),
+      wires: [wireCurve(59, 60, 263, 60, 9), wireCurve(59, 63, 263, 63, 12), wireCurve(263, 60, 447, 60, 9), wireCurve(263, 63, 447, 63, 12)],
+      walls: ROW.filter((b) => !b.sign).map((b) => ({ x0: b.x, x1: b.x + b.w, y: 140 - b.h - 3 })) });
     setCarLanes(162, 174, 'br');
     configure({
       roofs: ROW.map((b) => ({ x0: b.x, x1: b.x + b.w, y: 140 - b.h - 3 })),

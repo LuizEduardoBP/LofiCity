@@ -11,6 +11,7 @@ import {
 } from '../engine/palette';
 import { configure, drawFarPrecip, drawNearPrecip, drawRipples, precip } from '../fx/precip';
 import { drawFireworks, drawLightning } from '../fx/sky-events';
+import { drawAnimalsGround, drawAnimalsPerched, drawAnimalsSky, setupAnimals, updateAnimals } from '../actors/animals';
 import { drawPeople, peopleCount, setLanes, tickSpawns, updatePeople } from '../actors/people';
 import { S, hourIn } from '../sky/state';
 import { drawFog, drawSky, drawStreet, type Street } from './common';
@@ -254,16 +255,17 @@ function floodlights() {
 }
 
 function update(dt: number) {
+  updateAnimals(dt);
   updateMatch(dt); updateBus(dt);
   tickSpawns(dt, mode === 'match' ? 2 : 1); updatePeople(dt);
 }
 
 const FOG = [{ y: 104, h: 9, sp: 0.4 }, { y: 150, h: 6, sp: -0.3 }];
 function render() {
-  drawSky(HORIZON); drawLightning();
+  drawSky(HORIZON); drawAnimalsSky(); drawLightning();
   blitLayer(far); drawFireworks();
   blitLayer(mid); lit(); wallCrowd(); drawBus(); drawFarPrecip();
-  blitLayer(front); drawPeople();
+  blitLayer(front); drawAnimalsPerched(); drawPeople(); drawAnimalsGround();
   drawStreet(street); floodlights();
   drawGoal(PITCH.x0, 1); drawGoal(PITCH.x1, -1);
   if (mode !== 'none') {
@@ -282,6 +284,7 @@ export const campoRodoviaria: Scene = {
   build() {
     if (!built) { buildFar(); buildMid(); buildFront(); buildGround(); built = true; }
     setLanes([{ y: 142 }, { y: 145 }]);
+    setupAnimals({ ground: [143, 145], dogs: 2, sleepSpots: [330], lamps: FLOODS.map((x) => ({ x, y: 43 })), walls: [{ x0: 4, x1: 120, y: 122 }, { x0: 200, x1: 296, y: 122 }] });
     configure({ roofs: [{ x0: 296, x1: 480, y: 112 }], tips: [{ x: 297, y: 114, end: 140 }], lamps: [], ground0: 140, horizon: HORIZON });
     mode = 'none';
     for (let i = 0; i < 120; i++) update(1 / 30);

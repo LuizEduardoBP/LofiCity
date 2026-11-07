@@ -5,6 +5,7 @@ import { G, put, rect } from '../engine/gfx';
 import { bay, mulberry32 } from '../engine/math';
 import { CBLUE, CGREEN, CNAVY, CRED, CYELL, HALO, LIGHT, MAG, MAGD, STEEL, VOID, WCOOL, WDIM, WHITE, CBEIGE, SNOW } from '../engine/palette';
 import { S } from '../sky/state';
+import { drawBr, setBrLanes, updateBr } from './br-traffic';
 
 type CarKind = 'taxi' | 'kei' | 'sedan' | 'truck' | 'bus' | 'moto';
 interface Car { on: boolean; x: number; dir: number; sp: number; lane: number; kind: CarKind; body: number; len: number; rider: number; pillion: boolean }
@@ -15,7 +16,10 @@ const C: Car[] = Array.from({ length: POOL }, () => ({ on: false, x: 0, dir: 1, 
 let laneY = [158, 172], style: 'jp' | 'br' = 'jp';
 let spawnT = 3;
 
-export function setCarLanes(far: number, near: number, s: 'jp' | 'br' = 'jp') { laneY = [far, near]; style = s; for (const c of C) c.on = false; }
+export function setCarLanes(far: number, near: number, s: 'jp' | 'br' = 'jp') {
+  laneY = [far, near]; style = s; for (const c of C) c.on = false;
+  if (s === 'br') setBrLanes(far, near); // Esperança has its own traffic (br-traffic.ts)
+}
 
 function pickBr(c: Car) {
   const k = r(), h = S.cal.hour;
@@ -45,6 +49,7 @@ function spawn() {
 }
 
 export function updateCars(dt: number, density = 1) {
+  if (style === 'br') { updateBr(dt, density); return; }
   spawnT -= dt * (0.02 + 0.12 * S.busy) * density * (1 - 0.5 * S.snowCover);
   if (spawnT <= 0) { spawnT = 0.4 + r(); spawn(); }
   for (const c of C) {
@@ -113,6 +118,7 @@ function drawCar(c: Car) {
 }
 
 export function drawCars() {
+  if (style === 'br') { drawBr(); return; }
   for (const c of C) if (c.on && c.lane === 0) drawCar(c);
   for (const c of C) if (c.on && c.lane === 1) drawCar(c);
 }

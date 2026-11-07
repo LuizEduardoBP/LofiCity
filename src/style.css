@@ -88,3 +88,46 @@ body.idle .radio:not(.playing) { opacity: 0; }
 .radio .lic:hover { text-decoration: underline; opacity: 1; }
 .radio .track { text-transform: none; }
 body.idle .radio .meta { text-shadow: 0 1px 2px #000, 0 0 6px #000; }
+
+/* author credit, bottom-left under the radio; stays faintly visible when idle */
+.credit {
+  position: fixed; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.05em; color: var(--muted); text-decoration: none;
+  text-shadow: 0 1px 2px #000; opacity: 0.85; transition: opacity 0.7s ease, color 0.2s ease;
+}
+.credit:hover { color: var(--cyan); opacity: 1; }
+.credit:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
+body.idle .credit { opacity: 0.4; }
+
+/* "rotate your phone" overlay: touch screens held upright, until dismissed */
+#rotate { display: none; }
+@media (orientation: portrait) and (pointer: coarse) {
+  body:not(.portrait-ok) #rotate {
+    position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; padding: 24px 16px; background: rgba(5, 4, 11, 0.94); color: var(--ink); text-align: center;
+    font-family: var(--font-ui); letter-spacing: 0.06em; text-transform: uppercase;
+  }
+}
+#rotate .phone { width: 84px; height: 84px; color: var(--cyan); filter: drop-shadow(0 0 8px rgba(79, 240, 255, 0.5)); animation: turn 2.4s ease-in-out infinite; }
+@keyframes turn { 0%, 25% { transform: rotate(0deg); } 55%, 100% { transform: rotate(-90deg); } }
+#rotate .rt-title { margin: 6px 0 0; font-size: 18px; color: var(--ink); text-shadow: 0 0 8px rgba(255, 79, 163, 0.5); }
+#rotate .rt-sub { margin: 0 0 14px; font-size: 11px; color: var(--muted); max-width: 26ch; line-height: 1.6; }
+#rotate button {
+  font: inherit; font-size: 10px; letter-spacing: inherit; text-transform: inherit; color: var(--muted); background: transparent;
+  border: 1px solid var(--line); border-radius: 2px; padding: 10px 14px; cursor: pointer;
+}
+#rotate button:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { #rotate .phone { animation: none; transform: rotate(-90deg); } }
+
+/* phones held sideways: the frame is short, so the UI gets compact and drops secondary lines */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hud { font-size: 9px; padding: 6px 9px; gap: 2px; top: calc(env(safe-area-inset-top, 0px) + 8px); }
+  .hud .clock { font-size: 16px; } .hud .temp { font-size: 12px; }
+  .hud .hint, #season { display: none; }
+  .hud .city select { padding: 2px 5px; }
+  .radio { width: 240px; font-size: 9px; padding: 6px 8px; gap: 4px; bottom: calc(env(safe-area-inset-bottom, 0px) + 48px); }
+  .radio button { padding: 4px 6px; }
+  .bar { bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); gap: 4px; }
+  .bar button { padding: 6px 8px; font-size: 9px; }
+  .credit { bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); font-size: 9px; }
+}

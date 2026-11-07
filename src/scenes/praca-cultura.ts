@@ -12,6 +12,7 @@ import {
 } from '../engine/palette';
 import { configure, drawFarPrecip, drawNearPrecip, drawRipples, precip } from '../fx/precip';
 import { drawFireworks, drawLightning } from '../fx/sky-events';
+import { drawAnimalsGround, drawAnimalsPerched, drawAnimalsSky, setupAnimals, updateAnimals } from '../actors/animals';
 import { drawPeople, peopleCount, setLanes, tickSpawns, updatePeople } from '../actors/people';
 import { drawCars, setCarLanes, updateCars } from '../actors/cars';
 import { type Tree, drawTree, makeTree } from '../actors/trees';
@@ -163,13 +164,14 @@ function passion() {
 }
 
 function update(dt: number) {
+  updateAnimals(dt);
   const k = paixao() ? 5 : feira() ? 2.6 : weekendNight() ? 2.2 : S.festa || S.saoJoao ? 2 : 1.2;
   tickSpawns(dt, k); updatePeople(dt); updateCars(dt, 0.7);
 }
 
 const FOG = [{ y: 106, h: 9, sp: 0.5 }, { y: 140, h: 6, sp: -0.4 }];
 function render() {
-  drawSky(HORIZON); drawLightning();
+  drawSky(HORIZON); drawAnimalsSky(); drawLightning();
   blitLayer(far); drawFireworks();
   blitLayer(mid); lit(); drawFarPrecip();
   for (const tr of trees) drawTree(tr);
@@ -180,7 +182,7 @@ function render() {
   for (const l of LAMPS) lampLight(l);
   fair(); passion();
   if (S.festa || S.saoJoao) { bandeirolas(132, 72, 318, 72, 14, 2); bulbs(0, 80, 132, 72, 6); bulbs(318, 72, 480, 80, 6); }
-  drawPeople();
+  drawAnimalsPerched(); drawPeople(); drawAnimalsGround();
   drawStreet(street); drawCars(); drawRipples(); drawFog(FOG); drawNearPrecip();
 }
 
@@ -195,6 +197,8 @@ export const pracaCultura: Scene = {
       built = true;
     }
     setLanes([{ y: 142 }, { y: 144 }, { y: 146 }]);
+    setupAnimals({ ground: [142, 146], dogs: 2, sleepSpots: [150], lamps: LAMPS.flatMap((l) => [{ x: l.x - 13, y: l.top }, { x: l.x + 14, y: l.top }]),
+      walls: [{ x0: 0, x1: 50, y: 97 }, { x0: 114, x1: 162, y: 111 }, { x0: 318, x1: 350, y: 111 }, { x0: 418, x1: 480, y: 101 }] });
     setCarLanes(160, 174, 'br');
     configure({ roofs: [{ x0: 164, x1: 316, y: 98 }], tips: [{ x: 165, y: 99, end: 140 }, { x: 315, y: 99, end: 140 }], lamps: LAMPS.map((l) => ({ x: l.x, y: l.top })), ground0: 140, horizon: HORIZON });
     for (let i = 0; i < 150; i++) update(1 / 30);

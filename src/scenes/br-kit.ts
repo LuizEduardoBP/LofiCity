@@ -37,6 +37,11 @@ export function casa(ly: Layer, x: number, w: number, h: number, ground: number,
   if (plat === 'escada') { L(ly, mid - 8, top - ph - 1, 16, 3, wall); L(ly, mid - 8, top - ph - 1, 16, 1, trim); L(ly, mid - 4, top - ph - 3, 8, 2, wall); L(ly, mid - 4, top - ph - 3, 8, 1, trim); }
   if (plat === 'frontao') for (let i = 0; i < 9; i++) { L(ly, mid - 9 + i, top - ph + 1 - Math.round(i * 0.5), 18 - i * 2, 1, wall); Lp(ly, mid - 9 + i, top - ph + 1 - Math.round(i * 0.5), trim); Lp(ly, mid + 8 - i, top - ph + 1 - Math.round(i * 0.5), trim); }
   if (plat === 'balaustre') { L(ly, x, top - ph + 2, w, ph - 2, 255); L(ly, x, top - ph + 2, w, 1, trim); for (let bx = x + 1; bx < x + w - 1; bx += 2) L(ly, bx, top - ph + 3, 1, ph - 3, trim); L(ly, x, top + 1, w, 2, trim); }
+  // what sits on Brazilian roofs and walls: blue water tanks, satellite dishes, AC units
+  const q = rng();
+  if (q < 0.45) { const tx = x + 3 + Math.floor(rng() * Math.max(1, w - 14)), ty = top - ph - 5; L(ly, tx, ty, 9, 6, CBLUE); L(ly, tx - 1, ty - 1, 11, 1, CBLUE); L(ly, tx, ty + 2, 9, 1, BNEAR); }
+  else if (q < 0.7) { const dx = x + w - 10 - Math.floor(rng() * 6), dy = top - ph - 6; for (let i = 0; i < 7; i++) Lp(ly, dx + i, dy + Math.round(Math.abs(i - 3) ** 1.6 / 3), STONEL); L(ly, dx + 3, dy + 2, 1, 5, STEEL); }
+  if (!shop && rng() < 0.35 && h > 30) { const ax = x + 2 + Math.floor(rng() * (w - 9)); L(ly, ax, top + 5, 6, 4, STONEL); for (let i = 0; i < 6; i += 2) Lp(ly, ax + i, top + 6, STONE); }
   // openings
   if (shop) {
     const n = w > 34 ? 2 : 1, dw = Math.floor((w - 6 - (n - 1) * 4) / n);
@@ -240,6 +245,11 @@ export function fogueira(x: number, ground: number) {
 }
 
 export const isNight = night;
+
+/** A sagging wire as a function of x, for birds to perch on (same curve as wire()). */
+export function wireCurve(x0: number, y0: number, x1: number, y1: number, sag: number) {
+  return { x0: Math.min(x0, x1), x1: Math.max(x0, x1), y: (x: number) => { const t = (x - x0) / (x1 - x0); return y0 + (y1 - y0) * t + sag * 4 * t * (1 - t); } };
+}
 
 // ---------- 3x5 pixel font (signs, letreiros) ----------
 const FONT: Record<string, string> = {

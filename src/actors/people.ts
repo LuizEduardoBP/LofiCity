@@ -20,6 +20,8 @@ export interface Person {
   H: number; skin: number; hair: number; hairStyle: Hair; hat: number; hatC: number;
   top: Top; topC: number; bottomC: number; skirt: boolean; accent: number; scarf: number;
   bag: Bag; bagC: number; umb: number; stoop: boolean; cane: boolean; dog: number; phone: boolean; box: number; light: boolean;
+  /** Esperança extras: jogging, a sun umbrella, a pushcart. */
+  run: boolean; sun: boolean; push: number;
 }
 
 export interface Lane { y: number }
@@ -37,7 +39,7 @@ const POOL = 18;
 const P: Person[] = Array.from({ length: POOL }, () => ({
   on: false, x: 0, dir: 1, sp: 0, ph: 0, lane: 0, kind: Kind.Walk, H: 16, skin: SKIN1, hair: HAIR1, hairStyle: Hair.Short,
   hat: 0, hatC: 0, top: Top.Jacket, topC: 0, bottomC: 0, skirt: false, accent: 255, scarf: 255, bag: Bag.None, bagC: 0,
-  umb: 255, stoop: false, cane: false, dog: 255, phone: false, box: 255, light: false,
+  umb: 255, stoop: false, cane: false, dog: 255, phone: false, box: 255, light: false, run: false, sun: false, push: 255,
 }));
 let lanes: Lane[] = [{ y: 145 }];
 
@@ -47,7 +49,7 @@ const SKINS: [number, number][] = [[SKIN1, 0.34], [SKIN2, 0.34], [SKIN3, 0.2], [
 const SKINS_BR: [number, number][] = [[SKIN1, 0.18], [SKIN2, 0.34], [SKIN3, 0.3], [SKIN4, 0.18]];
 const UMBS = [UMB, UMB, UMB, CNAVY, CRED, VOID, CBLUE, CGREEN, CYELL, MAGD];
 
-type Archetype = 'salary' | 'office' | 'student' | 'kid' | 'elder' | 'casual' | 'dog' | 'bike' | 'delivery' | 'chair' | 'yukata' | 'owl';
+type Archetype = 'salary' | 'office' | 'student' | 'kid' | 'elder' | 'casual' | 'dog' | 'bike' | 'delivery' | 'chair' | 'yukata' | 'owl' | 'runner' | 'sombrinha' | 'vendor';
 
 /** Weights per archetype for the current hour, weekday and season. */
 function archetypes(): [Archetype, number][] {
@@ -70,6 +72,10 @@ function archetypes(): [Archetype, number][] {
     ['chair', peak(8, 19) * 0.25 + (br ? peak(17.5, 22) * 1.2 : 0)],
     ['yukata', festival * 4],
     ['owl', peak(0, 5) * 2 + peak(23, 24)],
+    // Esperança: joggers at dawn and dusk, sun umbrellas on hot clear days, street vendors
+    ['runner', br ? peak(5, 7.5) * 2 + peak(17, 19.5) * 1.5 : 0],
+    ['sombrinha', br && S.temp > 26 && S.dayK > 0.6 && S.cloud < 0.5 ? 1.4 : 0],
+    ['vendor', br ? peak(8, 17) * 0.7 : 0],
   ];
 }
 
@@ -79,7 +85,8 @@ function dress(p: Person, a: Archetype) {
   p.H = 15 + ((r() * 3) | 0); p.skin = weighted(S.city.climate === 'agreste' ? SKINS_BR : SKINS); p.hair = weighted([[HAIR1, 0.62], [HAIR2, 0.3], [CORNG, 0.04], [CBEIGE, 0.04]]);
   p.hairStyle = female ? pick([Hair.Long, Hair.Bob, Hair.Bun, Hair.Long]) : pick([Hair.Short, Hair.Short, Hair.Spiky]);
   p.hat = 0; p.skirt = false; p.accent = 255; p.scarf = 255; p.bag = Bag.None; p.stoop = false; p.cane = false;
-  p.dog = 255; p.phone = false; p.box = 255; p.kind = Kind.Walk;
+  p.dog = 255; p.phone = false; p.box = 255; p.kind = Kind.Walk; p.run = false; p.sun = false; p.push = 255;
+  const br = S.city.climate === 'agreste';
   p.top = cold ? Top.Coat : cool ? Top.Jacket : hot ? Top.Tee : pick([Top.Jacket, Top.Tee, Top.Shirt]);
   p.topC = pick([CNAVY, VOID, CBEIGE, CGREEN, CRED, CBLUE, STEEL, CYELL]);
   p.bottomC = pick([CNAVY, VOID, CBEIGE, CBLUE, STEEL]);
@@ -97,6 +104,10 @@ function dress(p: Person, a: Archetype) {
       break;
     case 'student':
       p.H = 15 + ((r() * 2) | 0);
+      if (br) { // public-school uniform: white tee, blue trousers, backpack
+        p.top = Top.Tee; p.topC = WHITE; p.bottomC = CBLUE; p.bag = Bag.Backpack; p.bagC = pick([VOID, CNAVY, CRED, CBLUE]); p.phone = r() < 0.5; p.sp = 13 + r() * 5;
+        break;
+      }
       if (female) { p.top = Top.Sailor; p.topC = CNAVY; p.skirt = true; p.bottomC = CNAVY; p.accent = CRED; }
       else { p.top = Top.Gakuran; p.topC = VOID; p.bottomC = VOID; p.accent = CYELL; p.hairStyle = Hair.Short; }
       if (cold) p.scarf = pick([CRED, CNAVY, CBEIGE]);
@@ -106,12 +117,14 @@ function dress(p: Person, a: Archetype) {
       p.H = 10 + ((r() * 2) | 0); p.top = cold ? Top.Coat : hot ? Top.Tee : Top.Jacket; p.topC = pick([CYELL, CRED, CBLUE, CGREEN, WHITE]);
       p.bag = Bag.Randoseru; p.bagC = pick([CRED, VOID, WOOD, CNAVY, MAGD]); p.hat = r() < 0.6 ? 2 : 0; p.hatC = CYELL; p.sp = 13 + r() * 6;
       p.hairStyle = female ? Hair.Bob : Hair.Short;
+      if (br) { p.bag = Bag.Backpack; p.hat = 0; p.top = Top.Tee; p.topC = WHITE; p.bottomC = CBLUE; }
       break;
     case 'elder':
       p.H = 14 + ((r() * 2) | 0); p.hair = HAIR3; p.hairStyle = female ? Hair.Bun : r() < 0.5 ? Hair.Bald : Hair.Short;
       p.stoop = r() < 0.6; p.cane = r() < 0.5; p.topC = pick([CBEIGE, WOOD, CGREEN, STEEL, CNAVY]); p.sp = 6 + r() * 3;
       p.hat = !female && r() < 0.4 ? 2 : 0; p.hatC = pick([CBEIGE, STEEL]);
       if (female && r() < 0.5) { p.bag = Bag.Shoulder; p.bagC = WOOD; }
+      if (br && !female && r() < 0.45) { p.hat = 3; p.hatC = WOOD; } // chapéu de couro
       break;
     case 'casual':
       p.phone = r() < 0.5; p.hat = r() < 0.3 ? (cold ? 1 : 2) : 0; p.hatC = pick([VOID, CRED, CNAVY, CBEIGE]);
@@ -135,6 +148,17 @@ function dress(p: Person, a: Archetype) {
       p.top = Top.Yukata; p.topC = pick([CNAVY, CRED, WHITE, CBLUE, MAGD, CGREEN]); p.accent = pick([CYELL, CRED, WHITE, AMB]);
       p.hairStyle = female ? Hair.Bun : Hair.Short; p.sp = 8 + r() * 4; p.bag = Bag.None;
       break;
+    case 'runner':
+      p.run = true; p.top = Top.Tee; p.topC = pick([CYELL, CRED, CBLUE, WHITE, CGREEN, MAGD]); p.bottomC = pick([VOID, CNAVY, STEEL]);
+      p.bag = Bag.None; p.phone = false; p.hat = r() < 0.4 ? 2 : 0; p.hatC = pick([WHITE, VOID, CRED]); p.sp = 30 + r() * 8;
+      break;
+    case 'sombrinha':
+      p.sun = true; p.umb = pick([CRED, CYELL, CBLUE, MAGD, CGREEN]); p.hairStyle = pick([Hair.Long, Hair.Bun]); p.skirt = r() < 0.5;
+      p.top = Top.Tee; p.bag = Bag.Shoulder; p.bagC = pick([WOOD, CBEIGE, VOID]); p.sp = 9 + r() * 3;
+      break;
+    case 'vendor':
+      p.push = pick([CRED, CBLUE, WHITE, CYELL]); p.hat = 2; p.hatC = pick([WHITE, CYELL, CRED]); p.top = Top.Tee; p.sp = 7 + r() * 3;
+      break;
     case 'owl':
       p.phone = r() < 0.7; p.sp = 9 + r() * 6;
       if (r() < 0.5) { p.top = cold ? Top.Coat : Top.Suit; p.topC = VOID; p.accent = 255; p.bag = Bag.Briefcase; p.bagC = VOID; }
@@ -143,7 +167,7 @@ function dress(p: Person, a: Archetype) {
   if (cold && p.top !== Top.Yukata && p.scarf === 255 && r() < 0.45) p.scarf = pick([CRED, CYELL, WHITE, CBEIGE, CGREEN]);
   if (cold && p.hat === 0 && r() < 0.25) { p.hat = 1; p.hatC = pick([CRED, CNAVY, CBEIGE, VOID, CYELL]); }
   const wet = S.rain + S.snow > 0.08;
-  p.umb = wet && r() < 0.9 ? pick(UMBS) : 255;
+  p.umb = wet && r() < 0.9 ? pick(UMBS) : p.sun ? p.umb : 255;
   if (wet && p.umb === 255) p.sp *= 1.3; // hurrying without one
 }
 
@@ -197,11 +221,12 @@ function head(p: Person, hx: number, y: number, f: number) {
   if (hs === Hair.Spiky) { put(hx, y - 1, hc); put(hx - f, y - 1, hc); }
   if (p.hat === 1) { rect(hx - 1, y - 1, 3, 2, p.hatC); put(hx - f, y + 1, p.hatC); }
   else if (p.hat === 2) { rect(hx - 1, y, 3, 1, p.hatC); put(hx + 2 * f, y + 1, p.hatC); put(hx + f, y + 1, p.hatC); }
+  else if (p.hat === 3) { rect(hx - 2, y, 5, 1, p.hatC); rect(hx - 1, y - 1, 3, 1, p.hatC); put(hx - 2, y - 1, p.hatC); put(hx + 2, y - 1, p.hatC); } // leather hat, upturned brim
   if (p.phone && S.dayK < 0.5) { put(hx + 2 * f, y + 3, CYAN); put(hx + f, y + 2, WCOOL); }
 }
 
 function umbrella(p: Person, ux: number, yTop: number) {
-  if (p.umb === 255 || S.rain + S.snow < 0.06) return;
+  if (p.umb === 255 || (S.rain + S.snow < 0.06 && !p.sun)) return;
   const c = p.umb;
   rect(ux - 3, yTop, 7, 1, c);
   rect(ux - 4, yTop + 1, 9, 1, c);
@@ -222,8 +247,10 @@ function drawDog(dx: number, yF: number, f: number, c: number, ph: number, hand:
   for (let i = 0; i <= n; i++) { const t = i / (n || 1); put(hx + (ex - hx) * t, hy + (ey - hy) * t + Math.sin(t * Math.PI) * 1.5, VOID); }
 }
 
-function drawWalker(p: Person, yF: number) {
-  const f = p.dir, X = Math.round(p.x), H = p.H, fr = (p.ph | 0) & 3, s = STRIDE[fr];
+const STRIDE_RUN = [3, 0, 3, 0];
+function drawWalker(p: Person, yGround: number) {
+  const f = p.dir, X = Math.round(p.x), H = p.H, fr = (p.ph | 0) & 3, s = p.run ? STRIDE_RUN[fr] : STRIDE[fr];
+  const yF = yGround - (p.run && fr & 1 ? 1 : 0); // runners bounce
   const kid = H <= 11, legL = kid ? 4 : Math.round(H * 0.37), yHead = yF - H + 1 + (p.stoop ? 1 : 0);
   const hx = X + (p.stoop ? f : 0), yT = yHead + 4, yLeg = yF - legL + 1, tw = kid ? 1 : 2;
   const long = p.top === Top.Coat || p.top === Top.Yukata;
@@ -261,6 +288,11 @@ function drawWalker(p: Person, yF: number) {
   head(p, hx, yHead, f);
   umbrella(p, X + f, yHead - 5);
   if (p.dog !== 255) drawDog(X + 9 * f, yF, f, p.dog, p.ph, [armX, yT + 4]);
+  if (p.push !== 255) { // pushcart: box on a wheel, handles to the hands
+    const cx = f > 0 ? X + 3 : X - 9;
+    rect(cx, yF - 7, 7, 4, p.push); rect(cx, yF - 7, 7, 1, STEEL); put(cx + (f > 0 ? 5 : 1), yF - 1, VOID); put(cx + (f > 0 ? 5 : 1), yF - 2, VOID);
+    put(armX, yT + 4, STEEL); put(f > 0 ? cx - 1 : cx + 7, yF - 6, STEEL);
+  }
 }
 
 function wheel(cx: number, cy: number, rad: number, ph: number) {

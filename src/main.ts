@@ -5,6 +5,8 @@ import { backend, initPost, layout, opts, present } from './engine/post';
 import { audio } from './audio/audio';
 import { radio } from './audio/radio';
 import { precip, updatePrecip } from './fx/precip';
+import { animalsDebug } from './actors/animals';
+import { brTrafficDebug } from './actors/br-traffic';
 import { fireworksStats, updateSkyEvents, lightning } from './fx/sky-events';
 import { gradePalette } from './sky/grade';
 import { S, direct, settle } from './sky/state';
@@ -138,7 +140,7 @@ const actions: Record<string, () => void> = {
   full: () => {
     const d = document;
     if (d.fullscreenElement) void d.exitFullscreen?.().catch(() => {});
-    else void d.documentElement.requestFullscreen?.().catch(() => {});
+    else void d.documentElement.requestFullscreen?.().then(() => (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.('landscape')).catch(() => {});
   },
 };
 const BUTTONS: [string, string][] = [
@@ -149,6 +151,12 @@ for (const c of CITIES) sel.add(new Option(c.name, c.id));
 sel.value = city.id;
 sel.addEventListener('change', () => { setCity(sel.value); sel.blur(); });
 radio.mount($('radio'));
+// "rotate your phone" overlay (shown by CSS on upright touch screens); dismissal lasts for the session
+try { if (sessionStorage.getItem('loficity:portrait-ok')) document.body.classList.add('portrait-ok'); } catch { /* ignore */ }
+$('rotate-ok').addEventListener('click', () => {
+  document.body.classList.add('portrait-ok');
+  try { sessionStorage.setItem('loficity:portrait-ok', '1'); } catch { /* ignore */ }
+});
 
 const KEYS: Record<string, string> = {
   m: 'sound', r: 'music', p: 'station', n: 'skip', w: 'win', c: 'crt', t: 'city', s: 'scene', d: 'info', l: 'lightning', enter: 'full',
@@ -209,7 +217,9 @@ busy    ${S.busy.toFixed(2)}   tree d${S.tree.density.toFixed(2)} p${S.tree.pink
 ${scene.debug()}
 fps     ${fps}   work ${workMs.toFixed(1)} ms   ${backend()}
 drops   ${precip.liveDrops}/${precip.rainCap}  flakes ${precip.liveFlakes}  leaves ${precip.liveLeaves}
-fx      ${fireworksStats()}  fireworks ${S.fireworks}   radio ${radio.status()}`;
+fx      ${fireworksStats()}  fireworks ${S.fireworks}   radio ${radio.status()}${city.climate === 'agreste' ? `
+life    ${animalsDebug()}
+traffic ${brTrafficDebug() || '-'}` : ''}`;
   }
   requestAnimationFrame(frame);
 }

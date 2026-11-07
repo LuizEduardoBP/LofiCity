@@ -14,6 +14,8 @@ Lo-fi pixel-art scenes that follow each city's **real clock** and **live weather
   - `Praça da Cultura`: the town's postcard square, with the "EU ♥ ESPERANÇA" letters, craft fairs and the Paixão de Cristo in Holy Week.
   - `Campo da Rodoviária`: the dirt football pitch by the bus station; pickup games, weekend matches with a crowd, buses coming and going.
 
+Esperança's streets are busy with local life: motorcycles of every kind (mototáxi, delivery, the gas man with a botijão), Viação São José buses, the prefeitura school bus, carros-pipa, donkey carts, the carro de som, pickups carrying furniture, a Veraneio now and then; joggers, sun umbrellas and street vendors; street dogs, cats on the walls, birds on the wires, vultures on the thermals and bats around the lamps.
+
 Everything is drawn in code, with no image assets: an indexed framebuffer whose palette is graded for day, night, sunset and overcast skies.
 
 ## Run
@@ -31,6 +33,7 @@ pnpm shot       # screenshots into ./shots (needs a build; NODEBUG=1 hides the d
 - `#scene=praca-matriz`: pin a scene (`praca-matriz`, `rua-comercio`, `capelinha`, `praca-cultura`, `campo-rodoviaria`, `rain-corner`, `neon-alley`, `konbini`, `shrine`)
 - `#at=2026-12-24T22:00`: freeze a moment in the city's time zone (for testing; the UI always uses real time)
 - `#wx=rain`: force the weather (`clear`, `cloudy`, `rain`, `snow`, `storm`, `fog`)
+- `#car=bus`: make most Esperança traffic one kind, for previews (`moto`, `hatch`, `sedan`, `suv`, `pickup`, `veraneio`, `kombi`, `som`, `pipa`, `carroca`, `bus`, `micro`, `escolar`)
 
 ## Keys
 

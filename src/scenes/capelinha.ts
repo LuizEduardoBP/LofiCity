@@ -11,11 +11,12 @@ import {
 } from '../engine/palette';
 import { configure, drawFarPrecip, drawNearPrecip, drawRipples, precip } from '../fx/precip';
 import { drawFireworks, drawLightning } from '../fx/sky-events';
+import { drawAnimalsGround, drawAnimalsPerched, drawAnimalsSky, setupAnimals, updateAnimals } from '../actors/animals';
 import { drawPeople, peopleCount, setLanes, tickSpawns, updatePeople } from '../actors/people';
 import { S } from '../sky/state';
 import { doyOf } from '../sky/time';
 import { drawFog, drawSky, drawStreet, type Street } from './common';
-import { isNight, wire } from './br-kit';
+import { isNight, wire, wireCurve } from './br-kit';
 import type { Scene } from './types';
 
 const HORIZON = 116, STREET = 147, SH = 180 - STREET, CX = 250;
@@ -156,6 +157,7 @@ function lights() {
 const festa = () => S.cal.doy === doyOf(5, 27) || S.cal.doy === 0;
 
 function update(dt: number) {
+  updateAnimals(dt);
   const h = S.cal.hour, sunday = S.cal.weekday === 0;
   const k = festa() && h >= 16 && h < 21 ? 2 : (sunday ? 0.8 : 0.4) * (h >= 6 && h < 19 ? 1 : 0.3);
   tickSpawns(dt, k); updatePeople(dt);
@@ -163,11 +165,11 @@ function update(dt: number) {
 
 const FOG = [{ y: 112, h: 10, sp: 0.4 }, { y: 136, h: 6, sp: -0.3 }];
 function render() {
-  drawSky(HORIZON); drawLightning();
+  drawSky(HORIZON); drawAnimalsSky(); drawLightning();
   blitLayer(far); drawFireworks();
   blitLayer(mid); lights(); drawFarPrecip();
   blitLayer(front);
-  drawPeople();
+  drawAnimalsPerched(); drawPeople(); drawAnimalsGround();
   drawStreet(street); pool(); drawRipples(); drawFog(FOG); drawNearPrecip();
 }
 
@@ -178,6 +180,7 @@ export const capelinha: Scene = {
   build() {
     if (!built) { buildFar(); chapel = buildChapel(); buildRock(); built = true; }
     setLanes([{ y: 141 }, { y: 145 }]);
+    setupAnimals({ ground: [141, 145], dogs: 1, rock: [142, 145], wires: [wireCurve(151, 72, -10, 84, 6), wireCurve(151, 75, -10, 88, 6)] });
     configure({ roofs: [{ x0: CX - 12, x1: CX + 17, y: chapel.top + 30 }], tips: [], lamps: [], ground0: 138, horizon: HORIZON });
     for (let i = 0; i < 90; i++) update(1 / 30);
   },

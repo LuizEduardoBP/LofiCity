@@ -9,13 +9,14 @@ import {
 } from '../engine/palette';
 import { configure, drawFarPrecip, drawNearPrecip, drawRipples, precip } from '../fx/precip';
 import { drawFireworks, drawLightning } from '../fx/sky-events';
+import { drawAnimalsGround, drawAnimalsPerched, drawAnimalsSky, setupAnimals, updateAnimals } from '../actors/animals';
 import { drawPeople, peopleCount, setLanes, tickSpawns, updatePeople } from '../actors/people';
 import { drawCars, setCarLanes, updateCars } from '../actors/cars';
 import { S } from '../sky/state';
 import { drawFog, drawSky, drawStreet, type Street } from './common';
 import {
   type Lamp, type Opening, type Palm, bandeirolas, bulbs, cart, casa, christmasStar, drawOpenings, drawPalm, fogueira,
-  isNight, lampLight, lampPost, pole, wire,
+  isNight, lampLight, lampPost, pole, wire, wireCurve,
 } from './br-kit';
 import type { Scene } from './types';
 
@@ -113,7 +114,7 @@ function buildFront() {
 function buildGround() {
   for (let d = 0; d < SH; d++) for (let x = 0; x < WW; x++) street.base[d * WW + x] = wr() < 0.1 ? STONE : ASPH;
   for (let x = 4; x < WW; x += 20) for (let d = 16; d < 17; d++) for (let i = 0; i < 10; i++) street.base[d * WW + x + i] = CYELL;
-  for (let x = 300; x < 344; x += 6) for (let d = 2; d < SH - 2; d++) for (let i = 0; i < 3; i++) street.base[d * WW + x + i] = WHITE;
+  for (let x = 300; x < 344; x += 6) for (let d = 2; d < SH - 2; d++) for (let i = 0; i < 3; i++) street.base[d * WW + x + i] = TILEW; // crosswalk paint (WHITE would glow at night)
   for (let p = 0; p < 5; p++) {
     const cx = wr() * WW, cy = 3 + wr() * (SH - 6), rx = 8 + wr() * 18, ry = 2 + wr() * 2;
     for (let d = 0; d < SH; d++) for (let x = 0; x < WW; x++) { const a = (x - cx) / rx, b = (d - cy) / ry; if (a * a + b * b < 1) street.pud[d * WW + x] = 1; }
@@ -157,13 +158,14 @@ function windows() {
 }
 
 function update(dt: number) {
+  updateAnimals(dt);
   const crowd = S.procissao ? 5 : S.festa && S.cal.hour >= 18 ? 3 : 1.3;
   tickSpawns(dt, crowd); updatePeople(dt); updateCars(dt, 1);
 }
 
 const FOG = [{ y: 110, h: 10, sp: 0.5 }, { y: 140, h: 6, sp: -0.4 }];
 function render() {
-  drawSky(HORIZON); drawLightning();
+  drawSky(HORIZON); drawAnimalsSky(); drawLightning();
   blitLayer(far); drawFireworks();
   blitLayer(mid); drawOpenings(opens, S.cal.hour >= 7 && S.cal.hour < 19 && S.cal.weekday !== 0); windows(); clock(); uplights();
   drawFarPrecip();
@@ -174,7 +176,7 @@ function render() {
   if (S.festa || S.saoJoao) { bandeirolas(118, 70, 222, 58, 8, 0); bandeirolas(258, 58, 362, 70, 8, 3); if (S.festa) { bulbs(0, 74, 118, 70, 6); bulbs(362, 70, 480, 74, 6); } }
   if (S.saoJoao && S.cal.day >= 22 && S.cal.day <= 24 && S.cal.hour >= 18) fogueira(440, 146);
   cart(326, 146, S.stallOpen);
-  drawPeople();
+  drawAnimalsPerched(); drawPeople(); drawAnimalsGround();
   drawStreet(street); drawCars(); drawRipples(); drawFog(FOG); drawNearPrecip();
 }
 
@@ -185,6 +187,9 @@ export const praca: Scene = {
   build() {
     if (!built) { buildFar(); buildChurch(); buildSides(); buildFront(); buildGround(); built = true; }
     setLanes([{ y: 142 }, { y: 144 }, { y: 146 }]);
+    setupAnimals({ ground: [143, 145], dogs: 2, sleepSpots: [60, 300], lamps: [{ x: 106, y: 66 }, { x: 130, y: 66 }, { x: 350, y: 66 }, { x: 374, y: 66 }],
+      wires: [wireCurve(21, 61, 457, 61, 16), wireCurve(21, 64, 457, 64, 20), wireCurve(21, 68, 457, 68, 13)],
+      walls: [{ x0: 0, x1: 46, y: 101 }, { x0: 104, x1: 160, y: 105 }, { x0: 380, x1: 426, y: 103 }, { x0: 168, x1: 186, y: 60 }] });
     setCarLanes(158, 172, 'br');
     configure({ roofs: [{ x0: 168, x1: 312, y: 60 }], tips: [{ x: 170, y: 62, end: 140 }, { x: 309, y: 62, end: 140 }], lamps: LAMPS.map((l) => ({ x: l.x, y: l.top })), ground0: 140, horizon: HORIZON });
     for (let i = 0; i < 150; i++) update(1 / 30);
