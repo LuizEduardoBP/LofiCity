@@ -117,7 +117,9 @@ function updateHud() {
 }
 
 // ---------- controls ----------
-let showDebug = false;
+// technical panel for development and screenshots only: open the page with #debug
+const showDebug = params.has('debug');
+$('debug').hidden = !showDebug;
 const press = (id: string, on: boolean) => $(id).setAttribute('aria-pressed', on ? 'true' : 'false');
 const sel = $('city') as HTMLSelectElement;
 function setCity(id: string) {
@@ -133,14 +135,12 @@ function setCity(id: string) {
 }
 const actions: Record<string, () => void> = {
   sound: () => press('b-sound', audio.toggle()),
-  win: () => { opts.win = !opts.win; press('b-window', opts.win); },
   crt: () => { opts.crt = !opts.crt; press('b-crt', opts.crt); },
   city: () => setCity(CITIES[(CITIES.indexOf(city) + 1) % CITIES.length].id),
   scene: () => { scene = nextScene(city.id, scene); scene.build(); },
   music: () => radio.toggle(),
   station: () => radio.nextStation(),
   skip: () => radio.skip(),
-  info: () => { showDebug = !showDebug; $('debug').hidden = !showDebug; press('b-info', showDebug); },
   lightning: () => lightning.strike(),
   full: () => {
     const d = document;
@@ -149,7 +149,7 @@ const actions: Record<string, () => void> = {
   },
 };
 const BUTTONS: [string, string][] = [
-  ['b-sound', 'sound'], ['b-window', 'win'], ['b-crt', 'crt'], ['b-scene', 'scene'], ['b-info', 'info'], ['b-full', 'full'],
+  ['b-sound', 'sound'], ['b-crt', 'crt'], ['b-scene', 'scene'], ['b-full', 'full'],
 ];
 for (const [id, a] of BUTTONS) $(id).addEventListener('click', actions[a]);
 for (const c of CITIES) sel.add(new Option(c.name, c.id));
@@ -164,7 +164,7 @@ $('rotate-ok').addEventListener('click', () => {
 });
 
 const KEYS: Record<string, string> = {
-  m: 'sound', r: 'music', p: 'station', n: 'skip', w: 'win', c: 'crt', t: 'city', s: 'scene', d: 'info', l: 'lightning', enter: 'full',
+  m: 'sound', r: 'music', p: 'station', n: 'skip', c: 'crt', t: 'city', s: 'scene', l: 'lightning', enter: 'full',
 };
 addEventListener('keydown', (e) => {
   const tag = (e.target as HTMLElement).tagName;

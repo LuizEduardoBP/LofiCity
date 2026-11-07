@@ -38,12 +38,13 @@ pnpm shot       # screenshots into ./shots (needs a build; NODEBUG=1 hides the d
 - `#city=esperanca` (also `campina`, `joaopessoa`, `areia`, `remigio`, `tokyo`)
 - `#scene=praca-matriz`: pin a scene (`praca-matriz`, `rua-comercio`, `capelinha`, `praca-cultura`, `campo-rodoviaria`, `acude-velho`, `cabo-branco`, `centro-areia`, `lagoa-remigio`, `rain-corner`, `neon-alley`, `konbini`, `shrine`)
 - `#at=2026-12-24T22:00`: freeze a moment in the city's time zone (for testing; the UI always uses real time)
+- `#debug`: technical panel (for development)
 - `#wx=rain`: force the weather (`clear`, `cloudy`, `rain`, `snow`, `storm`, `fog`)
 - `#car=bus`: make most Esperança traffic one kind, for previews (`moto`, `hatch`, `sedan`, `suv`, `pickup`, `veraneio`, `kombi`, `som`, `pipa`, `carroca`, `bus`, `micro`, `escolar`)
 
 ## Keys
 
-T city, S scene, R radio, N next track, P station, M ambient sound, W rain on glass, C CRT, L lightning, D details, Enter fullscreen.
+T city, S scene, R radio, N next track, P station, M ambient sound, C CRT, L lightning, Enter fullscreen.
 
 ## Layout
 

@@ -15,36 +15,14 @@ void main(){ vec3 c=texture(uS,v).rgb*.227027;
  c+=(texture(uS,v+uD*3.2308).rgb+texture(uS,v-uD*3.2308).rgb)*.0702703; o=vec4(c,1.); }`;
 const FS_FINAL = `#version 300 es
 precision highp float; in vec2 v; out vec4 o;
-uniform sampler2D uS, uB; uniform float uT, uCrt, uWin, uShake, uBloom, uAsp, uH;
+uniform sampler2D uS, uB; uniform float uT, uCrt, uShake, uBloom, uAsp, uH;
 float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
-vec3 drops(vec2 uv, float t, vec2 g){
-  vec2 a=vec2(uAsp,1.); vec2 st=uv*a*g; st.y+=t*.25;
-  vec2 id=floor(st), f=fract(st)-.5; float n=h21(id);
-  float tt=t*.9+n*6.2831; float y=-sin(tt+sin(tt+sin(tt)*.5))*.38;
-  float x=(n-.5)*.7 + (fract(n*13.7)-.5)*.08*sin(f.y*8.);
-  vec2 d=(f-vec2(x,y))*vec2(1.,1.3);
-  float drop=smoothstep(.1,.04,length(d));
-  float tr=smoothstep(.035,.0,abs(f.x-x))*smoothstep(y,y+.04,f.y)*(1.-smoothstep(y,.5,f.y));
-  vec2 sid=floor(uv*a*g*3.5); vec2 sf=fract(uv*a*g*3.5)-.5; float sn=h21(sid+7.);
-  float st2=step(.9,sn)*smoothstep(.22,.1,length(sf-(vec2(fract(sn*7.),fract(sn*13.))-.5)*.4));
-  vec2 off=(-d*drop*.8 - sf*st2*.3/3.5)/(a*g); off.y+=tr*.002;
-  return vec3(off, drop+tr*.35+st2*.5);
-}
 void main(){
   vec2 uv=v; vec2 c=v*2.-1.;
   if(uCrt>.5){ vec2 k=c*(1.+dot(c,c)*.045); uv=k*.5+.5; }
-  float hi=0.;
-  if(uWin>.5){ vec2 gs=vec2(9.,3.)*vec2(1.,uH/180.); vec3 a=drops(uv,uT,gs); vec3 b=drops(uv*1.6+.37,uT*.7,gs*1.45); uv+=a.xy+b.xy*.7; hi=(a.z+b.z*.7); }
   uv.y+=uShake/uH;
   if(uv.x<0.||uv.y<0.||uv.x>1.||uv.y>1.){ o=vec4(0.,0.,0.,1.); return; }
   vec3 col=texture(uS,uv).rgb; col+=texture(uB,uv).rgb*uBloom;
-  if(uWin>.5){
-    col=col*(1.+hi*.12)+hi*.015;
-    col=mix(col, col*1.05+vec3(.02,.025,.04), (1.-smoothstep(0.,.28,v.y))*.55);
-    float fx=min(v.x,1.-v.x), fy=min(v.y,1.-v.y);
-    float fr=step(fx,.022/uAsp*1.78)+step(fy,.035)+step(abs(v.x-.5),.005/uAsp*1.78)+step(abs(v.y-.64),.008);
-    if(fr>0.) col=vec3(.045,.035,.06)+vec3(.09,.05,.03)*smoothstep(.0,.02,fx)*step(.004,fx);
-  }
   if(uCrt>.5){ float row=uv.y*uH; col*=.76+.24*sin(fract(row)*3.14159); col*=1.06; }
   vec2 vc=c*vec2(.85,1.); col*=1.-.2*dot(vc,vc);
   col+=(h21(gl_FragCoord.xy+fract(uT*7.)*311.)-.5)*.03;
@@ -59,7 +37,7 @@ interface GLR {
   uBS: WebGLUniformLocation | null; uTh: WebGLUniformLocation | null;
 }
 
-export const opts = { crt: false, win: false };
+export const opts = { crt: false };
 const view = document.getElementById('view') as HTMLCanvasElement;
 let R: GLR | null = null, ctx2d: CanvasRenderingContext2D | null = null;
 let low: HTMLCanvasElement | null = null, lowCtx: CanvasRenderingContext2D | null = null;
@@ -84,7 +62,7 @@ function initGL(): GLR | null {
   try {
     const pF = prog(FS_FINAL), pBl = prog(FS_BLUR), pB = prog(FS_BRIGHT);
     const u: GLR['u'] = {};
-    for (const n of ['uS', 'uB', 'uT', 'uCrt', 'uWin', 'uShake', 'uBloom', 'uAsp', 'uH']) u[n] = gl.getUniformLocation(pF, n);
+    for (const n of ['uS', 'uB', 'uT', 'uCrt', 'uShake', 'uBloom', 'uAsp', 'uH']) u[n] = gl.getUniformLocation(pF, n);
     return {
       gl, pB, pBl, pF, vao: gl.createVertexArray()!, bw: 0, bh: 0, w: 0, h: 0, u,
       uBlD: gl.getUniformLocation(pBl, 'uD'), uBlS: gl.getUniformLocation(pBl, 'uS'), uBS: gl.getUniformLocation(pB, 'uS'), uTh: gl.getUniformLocation(pB, 'uTh'),
@@ -162,7 +140,7 @@ function drawGL(r: GLR, t: number, shake: number, dayK: number) {
   gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, r.t2!);
   const u = r.u;
   gl.uniform1i(u.uS, 0); gl.uniform1i(u.uB, 1); gl.uniform1f(u.uT, t);
-  gl.uniform1f(u.uCrt, opts.crt ? 1 : 0); gl.uniform1f(u.uWin, opts.win ? 1 : 0);
+  gl.uniform1f(u.uCrt, opts.crt ? 1 : 0);
   gl.uniform1f(u.uShake, shake); gl.uniform1f(u.uBloom, 0.95 - 0.6 * dayK);
   gl.uniform1f(u.uAsp, W / H); gl.uniform1f(u.uH, H);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
