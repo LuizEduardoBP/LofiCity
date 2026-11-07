@@ -1,4 +1,8 @@
 import type { CityId } from '../sky/cities';
+import { acudeVelho } from './acude-velho';
+import { caboBranco } from './cabo-branco';
+import { centroAreia } from './centro-areia';
+import { lagoaRemigio } from './lagoa-remigio';
 import { campoRodoviaria } from './campo-rodoviaria';
 import { capelinha } from './capelinha';
 import { konbini } from './konbini';
@@ -13,6 +17,10 @@ import type { Scene } from './types';
 export const SCENES: Record<CityId, Scene[]> = {
   tokyo: [rainCorner, neonAlley, konbini, shrine],
   esperanca: [praca, ruaComercio, capelinha, pracaCultura, campoRodoviaria],
+  campina: [acudeVelho],
+  joaopessoa: [caboBranco],
+  areia: [centroAreia],
+  remigio: [lagoaRemigio],
 };
 
 const LAST_KEY = 'loficity:lastScene:';

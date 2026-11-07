@@ -5,7 +5,7 @@ import { G, put, rect } from '../engine/gfx';
 import { bay, mulberry32 } from '../engine/math';
 import { CBLUE, CGREEN, CNAVY, CRED, CYELL, HALO, LIGHT, MAG, MAGD, STEEL, VOID, WCOOL, WDIM, WHITE, CBEIGE, SNOW } from '../engine/palette';
 import { S } from '../sky/state';
-import { drawBr, setBrLanes, updateBr } from './br-traffic';
+import { drawBr, setBrLanes, tapBr, updateBr } from './br-traffic';
 
 type CarKind = 'taxi' | 'kei' | 'sedan' | 'truck' | 'bus' | 'moto';
 interface Car { on: boolean; x: number; dir: number; sp: number; lane: number; kind: CarKind; body: number; len: number; rider: number; pillion: boolean }
@@ -115,6 +115,17 @@ function drawCar(c: Car) {
     }
     for (let i = 1; i < 5; i++) if (bay(back - i * f, y - 5) < 0.4 * (1 - i / 5)) put(back - i * f, y - 5, MAGD);
   }
+}
+
+/** A tapped car or bus (either city's traffic). */
+export function tapCars(x: number, y: number): { sound: 'moto' | 'car' | 'kombi' | 'bus' | 'truck' | 'bray' | 'som'; x: number; y: number } | null {
+  if (style === 'br') return tapBr(x, y);
+  for (const c of C) {
+    if (!c.on) continue;
+    const gy = laneY[c.lane], h = c.kind === 'bus' ? 18 : 12;
+    if (x >= c.x - 2 && x <= c.x + c.len + 2 && y >= gy - h && y <= gy + 2) return { sound: c.kind === 'bus' ? 'bus' : c.kind === 'kei' ? 'kombi' : 'car', x: c.x + c.len / 2, y: gy - h };
+  }
+  return null;
 }
 
 export function drawCars() {

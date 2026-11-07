@@ -78,7 +78,7 @@ function tick() {
   A.body!.gain.setTargetAtTime(0.02 + 0.14 * S.rain, now, 2);
   A.wind!.gain.setTargetAtTime(Math.min(0.3, S.wind * 0.35 + S.snow * 0.06), now, 2);
   A.windF!.frequency.setTargetAtTime(300 + 500 * Math.abs(Math.sin(now * 0.13)) + S.storm * 400, now, 1);
-  const br = S.city.climate === 'agreste';
+  const br = S.city.br;
   // Esperança: cicadas in the dry, hot months, crickets on every warm night
   const summer = (br ? inDoy(doy, doyOf(9, 1), doyOf(1, 28)) : inDoy(doy, doyOf(6, 10), doyOf(8, 8))) ? 1 : 0;
   const autumn = br ? 1.4 : inDoy(doy, doyOf(7, 20), doyOf(10, 5)) ? 1 : 0;

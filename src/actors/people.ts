@@ -56,7 +56,7 @@ function archetypes(): [Archetype, number][] {
   const h = S.cal.hour, wd = S.cal.weekday >= 1 && S.cal.weekday <= 5 ? 1 : 0.25;
   const peak = (a: number, b: number) => (h >= a && h < b ? 1 : 0);
   const commute = peak(6.5, 9.5) + peak(17, 21) * 0.9;
-  const br = S.city.climate === 'agreste', biz = br ? 0.3 : 1;
+  const br = S.city.br, biz = br ? 0.3 : 1;
   const festival = !br && (S.fireworks || (S.cal.month >= 6 && S.cal.month <= 7 && h >= 17.5 && h < 22.5)) ? 1 : 0;
   const festa = br && (S.festa || S.saoJoao) && h >= 18 && h < 23 ? 1 : 0;
   return [
@@ -82,11 +82,11 @@ function archetypes(): [Archetype, number][] {
 function dress(p: Person, a: Archetype) {
   const cold = S.temp < 8, cool = S.temp < 17, hot = S.temp > 23;
   const female = r() < 0.5;
-  p.H = 15 + ((r() * 3) | 0); p.skin = weighted(S.city.climate === 'agreste' ? SKINS_BR : SKINS); p.hair = weighted([[HAIR1, 0.62], [HAIR2, 0.3], [CORNG, 0.04], [CBEIGE, 0.04]]);
+  p.H = 15 + ((r() * 3) | 0); p.skin = weighted(S.city.br ? SKINS_BR : SKINS); p.hair = weighted([[HAIR1, 0.62], [HAIR2, 0.3], [CORNG, 0.04], [CBEIGE, 0.04]]);
   p.hairStyle = female ? pick([Hair.Long, Hair.Bob, Hair.Bun, Hair.Long]) : pick([Hair.Short, Hair.Short, Hair.Spiky]);
   p.hat = 0; p.skirt = false; p.accent = 255; p.scarf = 255; p.bag = Bag.None; p.stoop = false; p.cane = false;
   p.dog = 255; p.phone = false; p.box = 255; p.kind = Kind.Walk; p.run = false; p.sun = false; p.push = 255;
-  const br = S.city.climate === 'agreste';
+  const br = S.city.br;
   p.top = cold ? Top.Coat : cool ? Top.Jacket : hot ? Top.Tee : pick([Top.Jacket, Top.Tee, Top.Shirt]);
   p.topC = pick([CNAVY, VOID, CBEIGE, CGREEN, CRED, CBLUE, STEEL, CYELL]);
   p.bottomC = pick([CNAVY, VOID, CBEIGE, CBLUE, STEEL]);
@@ -203,6 +203,16 @@ export function updatePeople(dt: number) {
     p.ph += dt * (p.kind === Kind.Bike ? 6 : p.sp * 0.42);
     if (p.x < G.camX - 40 || p.x > G.camX + G.W + 40) p.on = false;
   }
+}
+
+/** A tapped pedestrian (and their dog, if any). */
+export function tapPeople(x: number, y: number): { x: number; y: number; dog: boolean } | null {
+  for (const p of P) {
+    if (!p.on) continue;
+    const gy = lanes[p.lane]?.y ?? 0;
+    if (Math.abs(x - p.x) < 5 && y > gy - p.H - 2 && y < gy + 2) return { x: p.x, y: gy - p.H, dog: p.dog !== 255 };
+  }
+  return null;
 }
 
 export const peopleCount = () => P.reduce((n, p) => n + (p.on ? 1 : 0), 0);

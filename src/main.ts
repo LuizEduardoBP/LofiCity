@@ -1,7 +1,12 @@
 /* LoFi City — procedural lo-fi pixel scenes that follow each city's real clock and live weather. */
 import './style.css';
 import { G, frameFor, setFrame } from './engine/gfx';
-import { backend, initPost, layout, opts, present } from './engine/post';
+import { backend, initPost, layout, opts, present, toFrame } from './engine/post';
+import { sfx } from './audio/sfx';
+import { drawEmotes, emote } from './fx/emotes';
+import { tapAnimals } from './actors/animals';
+import { tapPeople } from './actors/people';
+import { tapCars } from './actors/cars';
 import { audio } from './audio/audio';
 import { radio } from './audio/radio';
 import { precip, updatePrecip } from './fx/precip';
@@ -83,8 +88,8 @@ function weatherWord(): string {
 }
 function seasonWord(): string {
   const m = S.cal.month;
-  if (city.climate === 'agreste') {
-    const tags = [m >= 2 && m <= 6 ? 'quadra chuvosa' : 'estação seca'];
+  if (city.br) {
+    const tags = [city.climate === 'litoral' ? (m >= 3 && m <= 7 ? 'inverno chuvoso' : 'verão') : m >= 2 && m <= 6 ? 'quadra chuvosa' : 'estação seca'];
     if (S.festa) tags.push(S.procissao ? 'procissão' : 'festa da padroeira');
     if (S.saoJoao) tags.push('são joão');
     if (S.natal && !S.festa) tags.push('natal');
@@ -168,6 +173,16 @@ addEventListener('keydown', (e) => {
   if (a) actions[a]();
 });
 $('view').addEventListener('dblclick', actions.full);
+// Tap what moves: birds fly off, cats bolt, dogs bark and run, people say hi, vehicles honk.
+$('view').addEventListener('pointerdown', (e) => {
+  const f = toFrame(e.clientX, e.clientY), x = f.x + G.camX, y = f.y - G.oy;
+  const a = tapAnimals(x, y);
+  if (a) { sfx(a.kind === 'bird' ? 'chirp' : a.kind === 'cat' ? 'meow' : 'bark'); emote(a.x, a.y, a.kind === 'bird' ? '♪' : '!'); return; }
+  const p = tapPeople(x, y);
+  if (p) { sfx(p.dog ? 'bark' : 'oi'); emote(p.x, p.y, Math.random() < 0.5 ? '♥' : '!'); return; }
+  const c = tapCars(x, y);
+  if (c) { sfx(c.sound); emote(c.x, c.y, '♪'); }
+});
 
 let idleTimer = 0, wakeLock: WakeLockSentinel | null = null;
 function requestWake() {
@@ -196,6 +211,7 @@ function frame(now: number) {
   direct(simNow(), city, dt);
   updateSky(dt); updateSkyEvents(dt); updatePrecip(dt); scene.update(dt);
   scene.render();
+  drawEmotes(dt);
   gradePalette();
   present(clock, S.shake, S.dayK);
   workMs = workMs * 0.95 + (performance.now() - t0) * 0.05;
@@ -217,7 +233,7 @@ busy    ${S.busy.toFixed(2)}   tree d${S.tree.density.toFixed(2)} p${S.tree.pink
 ${scene.debug()}
 fps     ${fps}   work ${workMs.toFixed(1)} ms   ${backend()}
 drops   ${precip.liveDrops}/${precip.rainCap}  flakes ${precip.liveFlakes}  leaves ${precip.liveLeaves}
-fx      ${fireworksStats()}  fireworks ${S.fireworks}   radio ${radio.status()}${city.climate === 'agreste' ? `
+fx      ${fireworksStats()}  fireworks ${S.fireworks}   radio ${radio.status()}${city.br ? `
 life    ${animalsDebug()}
 traffic ${brTrafficDebug() || '-'}` : ''}`;
   }

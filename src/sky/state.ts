@@ -40,8 +40,10 @@ function treeLook(doy: number) {
 function fireworksAt(cal: Cal, city: City): boolean {
   const { doy, hour, year } = cal;
   if (doy === 0 && hour < 0.4) return true; // New Year
-  if (city.climate === 'agreste') {
-    if (doy === doyOf(...FESTA_PADROEIRA.to) && hourIn(hour, 21.5, 22)) return true; // end of the procession
+  if (city.br) {
+    if (city.id === 'esperanca' && doy === doyOf(...FESTA_PADROEIRA.to) && hourIn(hour, 21.5, 22)) return true; // end of the procession
+    // Campina Grande's São João ("o Maior São João do Mundo") has fireworks most June nights
+    if (city.id === 'campina') return inDoy(doy, doyOf(5, 5), doyOf(5, 30)) && hourIn(hour, 21, 23.5) && hashf(year * 400 + doy + 3) < (inDoy(doy, doyOf(5, 22), doyOf(5, 24)) ? 1 : 0.5);
     return inDoy(doy, doyOf(5, 23), doyOf(5, 24)) && hourIn(hour, 20, 23.5) && hashf(year * 400 + doy + 7) < 0.8; // São João
   }
   if (inDoy(doy, doyOf(6, 22), doyOf(7, 31)) && hourIn(hour, 19.5, 20.75))
@@ -106,11 +108,11 @@ export function direct(ms: number, city: City, dtSim: number) {
   const doy = cal.doy;
   S.petals = ss(doyOf(2, 20), doyOf(2, 28), doy) * (1 - ss(doyOf(3, 10), doyOf(3, 18), doy));
   S.leaves = ss(doyOf(9, 20), doyOf(10, 5), doy) * (1 - ss(doyOf(10, 28), doyOf(11, 10), doy));
-  const br = city.climate === 'agreste';
+  const br = city.br, esp = city.id === 'esperanca';
   if (br) { S.petals = 0; S.leaves = 0; S.tree = { density: 1, pink: 0, red: 0 }; }
   else S.tree = treeLook(doy);
-  S.festa = br && inDoy(doy, doyOf(...FESTA_PADROEIRA.from), doyOf(...FESTA_PADROEIRA.to));
-  S.procissao = br && doy === doyOf(...FESTA_PADROEIRA.to) && hourIn(h, 17, 21.5);
+  S.festa = esp && inDoy(doy, doyOf(...FESTA_PADROEIRA.from), doyOf(...FESTA_PADROEIRA.to));
+  S.procissao = esp && doy === doyOf(...FESTA_PADROEIRA.to) && hourIn(h, 17, 21.5);
   S.saoJoao = br && inDoy(doy, doyOf(5, 1), doyOf(5, 30));
   S.natal = br && inDoy(doy, doyOf(11, 1), doyOf(0, 6));
   if (br) S.stallOpen = hourIn(h, 17, 23.5);

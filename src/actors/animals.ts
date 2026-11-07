@@ -20,9 +20,9 @@ let cfg: AnimalSetup = { ground: [145] };
 
 // ---------- dogs ----------
 type DogState = 'walk' | 'sniff' | 'sit' | 'scratch' | 'sleep';
-interface Dog { on: boolean; x: number; y: number; dir: number; sp: number; c: number; spot: number; st: DogState; t: number; ph: number; ear: boolean }
+interface Dog { on: boolean; x: number; y: number; dir: number; sp: number; c: number; spot: number; st: DogState; t: number; ph: number; ear: boolean; boost: number }
 const DOG_COLORS = [TERRA, TERRA, TERRA, VOID, CBEIGE, TILEW, WOOD]; // caramelo first
-const dogs: Dog[] = Array.from({ length: 4 }, () => ({ on: false, x: 0, y: 0, dir: 1, sp: 0, c: TERRA, spot: 255, st: 'walk' as DogState, t: 0, ph: 0, ear: false }));
+const dogs: Dog[] = Array.from({ length: 4 }, () => ({ on: false, x: 0, y: 0, dir: 1, sp: 0, c: TERRA, spot: 255, st: 'walk' as DogState, t: 0, ph: 0, ear: false, boost: 0 }));
 let dogT = 4;
 
 function spawnDog() {
@@ -48,7 +48,8 @@ function updateDogs(dt: number) {
       d.t = d.st === 'walk' ? 3 + r() * 6 : 1.5 + r() * 3;
       if (d.st === 'walk' && r() < 0.25) d.dir = -d.dir;
     }
-    if (d.st === 'walk') d.x += d.dir * d.sp * dt;
+    d.boost = Math.max(0, d.boost - dt);
+    if (d.st === 'walk') d.x += d.dir * (d.boost > 0 ? 48 : d.sp) * dt;
     if (d.x < G.camX - 30 || d.x > G.camX + G.W + 30) d.on = false;
   }
 }
@@ -73,7 +74,7 @@ function drawDog(d: Dog) {
 }
 
 // ---------- cats ----------
-interface Cat { x: number; y: number; perch: Perch; dir: number; c: number; st: 'sit' | 'walk' | 'loaf'; t: number; ph: number }
+interface Cat { x: number; y: number; perch: Perch; dir: number; c: number; st: 'sit' | 'walk' | 'loaf'; t: number; ph: number; boost: number }
 let cats: Cat[] = [];
 function initCats() {
   cats = [];
@@ -81,15 +82,16 @@ function initCats() {
   const n = Math.min(walls.length, 1 + ((r() * 2) | 0));
   for (let i = 0; i < n; i++) {
     const p = walls[(r() * walls.length) | 0];
-    cats.push({ x: p.x0 + 3 + r() * (p.x1 - p.x0 - 6), y: p.y, perch: p, dir: r() < 0.5 ? 1 : -1, c: pick([VOID, TILEW, TERRA, STEEL, CBEIGE]), st: 'sit', t: 3 + r() * 8, ph: r() * 6 });
+    cats.push({ x: p.x0 + 3 + r() * (p.x1 - p.x0 - 6), y: p.y, perch: p, dir: r() < 0.5 ? 1 : -1, c: pick([VOID, TILEW, TERRA, STEEL, CBEIGE]), st: 'sit', t: 3 + r() * 8, ph: r() * 6, boost: 0 });
   }
 }
 function updateCats(dt: number) {
   for (const c of cats) {
     c.ph += dt; c.t -= dt;
     if (c.t <= 0) { c.st = pick(['sit', 'sit', 'walk', 'loaf'] as const); c.t = c.st === 'walk' ? 2 + r() * 3 : 4 + r() * 10; if (r() < 0.4) c.dir = -c.dir; }
+    c.boost = Math.max(0, c.boost - dt);
     if (c.st === 'walk') {
-      c.x += c.dir * 6 * dt;
+      c.x += c.dir * (c.boost > 0 ? 34 : 6) * dt;
       if (c.x < c.perch.x0 + 2 || c.x > c.perch.x1 - 3) { c.dir = -c.dir; c.x = Math.max(c.perch.x0 + 2, Math.min(c.perch.x1 - 3, c.x)); }
     }
   }
@@ -202,6 +204,30 @@ function drawLizards(dt: number) {
     rect(x - 2, y - 1, 5, 1, LEAFG); put(x + 3 * f, y - 1, CYELL); put(x - 3 * f, y, BARK); put(x - 4 * f, y, BARK);
     put(x - 1, y, LEAFG); put(x + 1, y, LEAFG);
   }
+}
+
+// ---------- taps ----------
+/** Something was tapped at world (x, y): birds fly off, cats bolt, dogs bark and run. Returns what reacted. */
+export function tapAnimals(x: number, y: number): { kind: 'bird' | 'cat' | 'dog'; x: number; y: number } | null {
+  for (const b of birds) {
+    if (!b.on || b.fly) continue;
+    const by = b.wire.y(b.x);
+    if (Math.abs(x - b.x) < 6 && y > by - 7 && y < by + 3) {
+      for (const o of birds) if (o.on && !o.fly && o.wire === b.wire && Math.abs(o.x - b.x) < 16) {
+        o.fly = true; o.fx = o.x; o.fy = o.wire.y(o.x); o.vx = (o.x < x ? -1 : 1) * (30 + r() * 25); o.vy = -22 - r() * 16;
+      }
+      return { kind: 'bird', x: b.x, y: by - 2 };
+    }
+  }
+  for (const c of cats) if (Math.abs(x - c.x) < 6 && y > c.y - 10 && y < c.y + 2) {
+    c.st = 'walk'; c.t = 1.6; c.boost = 1.6; c.dir = x < c.x ? 1 : -1;
+    return { kind: 'cat', x: c.x, y: c.y - 6 };
+  }
+  for (const d of dogs) if (d.on && Math.abs(x - d.x) < 8 && y > d.y - 10 && y < d.y + 2) {
+    d.st = 'walk'; d.t = 3; d.boost = 2.5; d.dir = x < d.x ? 1 : -1;
+    return { kind: 'dog', x: d.x, y: d.y - 7 };
+  }
+  return null;
 }
 
 // ---------- API ----------

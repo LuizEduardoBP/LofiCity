@@ -64,14 +64,21 @@ function japan(ms: number, cal: Cal): Wx {
   return { temp, precip, rain, snow, storm, cloud: clamp(cloud, 0, 1), fog, wind, typhoon, tsuyu };
 }
 
-// Esperança (PB): monthly means, rain odds and thunderstorm odds.
-const A_TEMP = [23.5, 23.6, 23.4, 22.9, 21.9, 20.6, 19.8, 19.9, 21, 22.3, 23, 23.4];
-const A_PRECIP = [0.24, 0.3, 0.42, 0.5, 0.5, 0.55, 0.5, 0.36, 0.2, 0.1, 0.1, 0.15];
-const A_STORM = [0.25, 0.3, 0.4, 0.35, 0.15, 0.05, 0.03, 0.02, 0.02, 0.05, 0.1, 0.2];
+// Paraíba climates: monthly means (°C), rain odds, thunderstorm odds, daily swing and morning mist.
+interface Tropic { temp: number[]; precip: number[]; storm: number[]; swing: number; mist: number }
+const TROPIC: Record<'agreste' | 'brejo' | 'litoral', Tropic> = {
+  // Borborema plateau (Esperança, Campina Grande, Remígio): mild, rainy March to July
+  agreste: { temp: [23.5, 23.6, 23.4, 22.9, 21.9, 20.6, 19.8, 19.9, 21, 22.3, 23, 23.4], precip: [0.24, 0.3, 0.42, 0.5, 0.5, 0.55, 0.5, 0.36, 0.2, 0.1, 0.1, 0.15], storm: [0.25, 0.3, 0.4, 0.35, 0.15, 0.05, 0.03, 0.02, 0.02, 0.05, 0.1, 0.2], swing: 4.2, mist: 0.45 },
+  // Brejo (Areia): cooler and wetter, mist in the mornings and evenings of the rainy months
+  brejo: { temp: [22.5, 22.6, 22.4, 21.8, 20.8, 19.4, 18.6, 18.7, 19.8, 21.2, 22, 22.4], precip: [0.3, 0.35, 0.5, 0.6, 0.65, 0.7, 0.65, 0.5, 0.3, 0.2, 0.18, 0.22], storm: [0.2, 0.25, 0.3, 0.25, 0.1, 0.04, 0.02, 0.02, 0.02, 0.04, 0.08, 0.15], swing: 3.8, mist: 0.75 },
+  // coast (João Pessoa): warm all year, sea breeze, showers from April to July
+  litoral: { temp: [27.5, 27.6, 27.4, 27, 26.3, 25.3, 24.6, 24.7, 25.5, 26.3, 26.9, 27.3], precip: [0.25, 0.3, 0.45, 0.55, 0.6, 0.65, 0.6, 0.4, 0.25, 0.15, 0.15, 0.2], storm: [0.1, 0.15, 0.2, 0.2, 0.15, 0.1, 0.05, 0.03, 0.02, 0.02, 0.05, 0.08], swing: 2.6, mist: 0.1 },
+};
 
-function agreste(ms: number, cal: Cal): Wx {
+function tropic(ms: number, cal: Cal, T: Tropic): Wx {
   const h = ms / 3.6e6, { month: m, doy, hour } = cal;
-  const p = A_PRECIP[m];
+  const A_TEMP = T.temp, A_STORM = T.storm;
+  const p = T.precip[m];
   const pot = 0.6 * vnoise(13, h / 5) + 0.4 * vnoise(29, h / 1.4);
   const q = 0.5 + (0.5 - p) * 0.5;
   // winter rain on the plateau is mostly drizzle; summer rain comes as afternoon showers
@@ -84,11 +91,12 @@ function agreste(ms: number, cal: Cal): Wx {
   const wind = 0.08 + (vnoise(43, h / 2) - 0.5) * 0.14 + storm * 0.4;
   const mi = doy / 30.44 - 0.5, i = Math.floor(mi), f = mi - i;
   const mean = A_TEMP[(i + 12) % 12] + (A_TEMP[(i + 13) % 12] - A_TEMP[(i + 12) % 12]) * ss(0, 1, f);
-  const temp = mean + 4.2 * Math.cos((2 * Math.PI * (hour - 14)) / 24) * (1 - 0.5 * Math.min(1, cloud))
+  const temp = mean + T.swing * Math.cos((2 * Math.PI * (hour - 14)) / 24) * (1 - 0.5 * Math.min(1, cloud))
     + (vnoise(39, h / 40) - 0.5) * 3 - precip * 1.5;
   const dawn = ss(3, 5, hour) * (1 - ss(7, 9, hour));
-  const fog = clamp(0.08 + (winter ? 0.45 : 0.1) * dawn + 0.2 * precip * (1 - storm), 0, 1);
+  const dusk = ss(17, 19, hour) * (1 - ss(21, 23, hour));
+  const fog = clamp(0.08 + (winter ? T.mist : 0.1) * (dawn + (T.mist > 0.6 ? 0.5 * dusk : 0)) + 0.2 * precip * (1 - storm), 0, 1);
   return { temp, precip, rain: precip, snow: 0, storm, cloud: clamp(cloud, 0, 1), fog, wind, typhoon: false, tsuyu: false };
 }
 
-export const weather = (ms: number, cal: Cal, climate: Climate): Wx => (climate === 'agreste' ? agreste(ms, cal) : japan(ms, cal));
+export const weather = (ms: number, cal: Cal, climate: Climate): Wx => (climate === 'japan' ? japan(ms, cal) : tropic(ms, cal, TROPIC[climate]));

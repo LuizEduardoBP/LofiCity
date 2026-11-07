@@ -299,6 +299,21 @@ function drawV(v: V) {
   }
 }
 
+const HORN: Record<Kind, 'moto' | 'car' | 'kombi' | 'bus' | 'truck' | 'bray' | 'som'> = {
+  moto: 'moto', hatch: 'car', sedan: 'car', suv: 'car', pickup: 'car', veraneio: 'kombi', kombi: 'kombi', som: 'som',
+  pipa: 'truck', carroca: 'bray', bus: 'bus', micro: 'bus', escolar: 'bus',
+};
+const TALL: Record<Kind, number> = { moto: 15, hatch: 13, sedan: 13, suv: 15, pickup: 14, veraneio: 15, kombi: 16, som: 24, pipa: 17, carroca: 24, bus: 28, micro: 24, escolar: 24 };
+/** A tapped vehicle: which horn to play and where to show the reaction. */
+export function tapBr(x: number, y: number) {
+  for (const v of VS) {
+    if (!v.on) continue;
+    const gy = laneY[v.lane];
+    if (x >= v.x - 2 && x <= v.x + v.len + 2 && y >= gy - TALL[v.kind] && y <= gy + 2) return { sound: HORN[v.kind], x: v.x + v.len / 2, y: gy - TALL[v.kind] };
+  }
+  return null;
+}
+
 export function drawBr() {
   for (const v of VS) if (v.on && v.lane === 0) drawV(v);
   for (const v of VS) if (v.on && v.lane === 1) drawV(v);

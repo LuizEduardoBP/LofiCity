@@ -119,6 +119,12 @@ export function initPost() {
 }
 
 /** Canvas fills the window; the frame is scaled to cover it (W,H already match the aspect). */
+/** Pointer position (CSS px) to frame pixel coordinates. */
+export function toFrame(clientX: number, clientY: number) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  return { x: ((clientX * dpr - vp.x) * G.W) / vp.w, y: ((clientY * dpr - vp.y) * G.H) / vp.h };
+}
+
 export function layout() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   view.width = Math.floor(innerWidth * dpr); view.height = Math.floor(innerHeight * dpr);

@@ -1,11 +1,11 @@
-/* Props shared by the Esperança scenes: casario facades with platibandas, white LED street
+/* Props shared by the Paraíba scenes: casario facades with platibandas, white LED street
    lights, concrete poles with sagging wires, palms that sway in the wind, bandeirolas for the
    festa and São João, the Christmas star on the lamp posts, a street-food cart and a bonfire. */
-import { L, Lp, type Layer, getW, put, rect, sx, sy } from '../engine/gfx';
+import { G, L, Lp, type Layer, getW, put, rect, sx, sy } from '../engine/gfx';
 import { bay, type Rng } from '../engine/math';
 import {
   AMB, AMBD, BARK, BMID, BNEAR, CBEIGE, CBLUE, CGREEN, CRED, CYELL, FOG, HALO, HALOOK, LEAFG, LEAFGD,
-  LEDW, LIGHT, STEEL, STONE, STONEL, TILEW, VOID, WCOOL, WDIM, WHITE, WOOD, WWARM, FPINK,
+  LEDW, LIGHT, STEEL, STONE, STONEL, TILEW, VOID, WCOOL, WDIM, WHITE, WOOD, WWARM, FPINK, BRIGHT, REFL, BFAR,
 } from '../engine/palette';
 import { S } from '../sky/state';
 
@@ -160,14 +160,16 @@ export function christmasStar(cx: number, cy: number, s: number) {
 }
 
 // ---------- palms ----------
-export interface Palm { x: number; ground: number; h: number; lean: number; ph: number }
+/** Coconut palm by default; `imperial` draws a royal palm: straight grey trunk, green crownshaft. */
+export interface Palm { x: number; ground: number; h: number; lean: number; ph: number; imperial?: boolean }
 
 export function drawPalm(p: Palm) {
   const t = S.ms / 1000, sway = Math.sin(t * 0.9 + p.ph) * (0.6 + Math.abs(S.wind) * 6);
   const tx = (u: number) => p.x + p.lean * u * u + sway * u * u * 0.5;
   for (let y = 0; y < p.h; y++) {
     const u = y / p.h, x = Math.round(tx(u)), yy = p.ground - y;
-    put(x, yy, y % 4 === 0 ? WOOD : BARK); put(x + 1, yy, y % 4 === 1 ? BARK : WOOD);
+    if (p.imperial) { const crown = y > p.h - 7; put(x, yy, crown ? LEAFG : STONEL); put(x + 1, yy, crown ? LEAFGD : y % 9 === 0 ? STONEL : STONE); }
+    else { put(x, yy, y % 4 === 0 ? WOOD : BARK); put(x + 1, yy, y % 4 === 1 ? BARK : WOOD); }
   }
   const cx = tx(1), cy = p.ground - p.h;
   const fronds = [-2.9, -2.4, -1.9, -1.3, -0.7, -0.25, 0.25];
@@ -179,7 +181,7 @@ export function drawPalm(p: Palm) {
       if (k > 3 && k % 2 === 0) { put(x, y + 1, LEAFGD); put(x + (Math.cos(a) > 0 ? -1 : 1), y + 2, u > 0.6 ? LEAFGD : LEAFG); }
     }
   });
-  rect(cx - 1, cy - 1, 3, 3, LEAFGD); put(cx - 1, cy + 2, WOOD); put(cx + 1, cy + 2, WOOD); // coconuts
+  rect(cx - 1, cy - 1, 3, 3, LEAFGD); if (!p.imperial) { put(cx - 1, cy + 2, WOOD); put(cx + 1, cy + 2, WOOD); } // coconuts
 }
 
 // ---------- festivities ----------
@@ -279,4 +281,56 @@ export function easterDoy(year: number): number {
   const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
   const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
   return Math.floor((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 1)) / 864e5);
+}
+
+// ---------- water, towers, cobbles, lanterns ----------
+
+/**
+ * Still water between world rows y0..y1: mirrors what is drawn above the waterline, broken by
+ * ripples that grow with the wind, tinted toward `tint` with depth. Lights stay bright.
+ */
+export function water(y0: number, y1: number, x0: number, x1: number, tint: number, deep: number, stretch = 1.4) {
+  const { buf, W, H } = G, t = S.ms / 1000, wind = Math.abs(S.wind) * 2 + S.rain;
+  const Y0 = Math.max(0, sy(y0)), Y1 = Math.min(H, sy(y1)), X0 = Math.max(0, sx(x0)), X1 = Math.min(W, sx(x1));
+  for (let Y = Y0; Y < Y1; Y++) {
+    const d = Y - sy(y0), k = d / Math.max(1, sy(y1) - sy(y0)), src = sy(y0) - 1 - Math.round(d * stretch);
+    const off = Math.round(Math.sin(Y * 0.9 + t * 1.6) * (0.5 + wind) + Math.sin(Y * 2.3 - t * 1.1) * 0.5);
+    for (let X = X0; X < X1; X++) {
+      const sxx = Math.min(W - 1, Math.max(0, X + off)), s0 = src >= 0 ? buf[src * W + sxx] : deep, b = bay(X, Y);
+      buf[Y * W + X] = BRIGHT[s0] ? (b < 0.75 ? REFL[s0] : tint) : b < 0.55 - k * 0.35 ? s0 : b < 0.9 ? tint : deep;
+    }
+  }
+}
+
+export interface TowerWin { x: number; y: number; rank: number }
+/** A high-rise: plain slab with a window grid, optional coloured band down one side. */
+export function tower(ly: Layer, x: number, w: number, top: number, ground: number, body: number, band: number | null, rng: Rng, wins: TowerWin[]) {
+  L(ly, x, top, w, ground - top, body); L(ly, x, top - 2, w, 2, STONE);
+  if (band !== null) L(ly, x + w - 4, top, 4, ground - top, band);
+  for (let wy = top + 3; wy < ground - 4; wy += 4) for (let wx = x + 2; wx < x + w - (band !== null ? 6 : 2); wx += 3) {
+    Lp(ly, wx, wy, BFAR); Lp(ly, wx + 1, wy, BFAR); wins.push({ x: wx, y: wy, rank: rng() });
+  }
+}
+export function drawTowerWins(wins: TowerWin[]) {
+  const n = night(), late = S.cal.hour >= 23 || S.cal.hour < 5 ? 0.2 : 0.55;
+  for (const w of wins) { const c = n && w.rank < late ? (w.rank < 0.08 ? WCOOL : WWARM) : BFAR; put(w.x, w.y, c); put(w.x + 1, w.y, c); }
+}
+
+/** Paralelepípedo: grey cobbles in offset rows, for historic streets. */
+export function cobbles(base: Uint8Array, rows: number, width: number, rng: Rng) {
+  for (let d = 0; d < rows; d++) for (let x = 0; x < width; x++) {
+    const row = d >> 1, edge = (d & 1) === 0 || (x + (row & 1) * 2) % 4 === 0;
+    base[d * width + x] = edge ? BMID : rng() < 0.3 ? STONEL : STONE;
+  }
+}
+
+/** Colonial wall lantern with a warm halo at night. */
+export function lantern(x: number, y: number) {
+  const n = night();
+  put(x, y - 1, VOID); rect(x - 1, y, 3, 1, VOID); rect(x - 1, y + 1, 3, 3, n ? LIGHT : STONEL); rect(x - 1, y + 4, 3, 1, VOID);
+  if (!n) return;
+  for (let j = -6; j <= 12; j++) for (let i = -9; i <= 9; i++) {
+    const c = getW(x + i, y + 2 + j), d = Math.hypot(i, j * 0.9) / 11;
+    if (c !== 255 && HALOOK[c] && d < 1 && bay(sx(x + i), sy(y + 2 + j)) < 0.32 * (1 - d)) put(x + i, y + 2 + j, d < 0.35 ? HALO : AMBD);
+  }
 }

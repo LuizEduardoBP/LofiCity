@@ -4,9 +4,13 @@ Lo-fi pixel-art scenes that follow each city's **real clock** and **live weather
 
 **Live:** https://loficity-lac.vercel.app
 
-**Cities**
+**Cities** (pick one in the selector; Esperança is the default)
 
-- **Tokyo** (default): `Esquina da chuva` (rain corner), `Beco neon` (neon alley), `Rua do konbini` (konbini street), `Santuário` (shrine). Japanese seasons: sakura, tsuyu, momiji, year-end snow, hanabi.
+- **Campina Grande**: `Açude Velho`, with the glass drums of the Museu de Arte Popular (the "Três Pandeiros") and the high-rises mirrored in the water; fireworks most nights of its famous São João in June.
+- **João Pessoa**: `Orla do Cabo Branco`, the sea where the sun rises first in the Americas, jangadas, coconut palms and the triangular lighthouse on the cliff, its beam sweeping the sky at night.
+- **Areia**: `Centro Histórico`, the listed colonial town of the Brejo: casario with iron balconies, the Câmara Municipal, the Teatro Minerva (1859), a cachaça shop, cobbles and mist.
+- **Remígio**: `Lagoa de Remígio`, the round lagoon with royal palms, houses up the hill, the matriz on top and ducks on the water.
+- **Tokyo**: `Esquina da chuva` (rain corner), `Beco neon` (neon alley), `Rua do konbini` (konbini street), `Santuário` (shrine). Japanese seasons: sakura, tsuyu, momiji, year-end snow, hanabi.
 - **Esperança, Paraíba, Brazil** (Brasília time). Local calendar: the patron saint's festival in January, Holy Week, São João in June, Christmas.
   - `Praça da Matriz`: the square in front of the Nossa Senhora do Bom Conselho church.
   - `Rua do Comércio`: the main shopping street, with a bar that puts its tables out at night.
@@ -17,6 +21,8 @@ Lo-fi pixel-art scenes that follow each city's **real clock** and **live weather
 Esperança's streets are busy with local life: motorcycles of every kind (mototáxi, delivery, the gas man with a botijão), Viação São José buses, the prefeitura school bus, carros-pipa, donkey carts, the carro de som, pickups carrying furniture, a Veraneio now and then; joggers, sun umbrellas and street vendors; street dogs, cats on the walls, birds on the wires, vultures on the thermals and bats around the lamps.
 
 Everything is drawn in code, with no image assets: an indexed framebuffer whose palette is graded for day, night, sunset and overcast skies.
+
+**Tap anything that moves**: birds fly off the wires, cats bolt along the walls, dogs bark and run, people say "oi!", and every vehicle has its own horn, from the moto's beep to the São José bus, the donkey cart's bray and the carro de som's jingle. All sounds are synthesized in the browser.
 
 ## Run
 
@@ -29,8 +35,8 @@ pnpm shot       # screenshots into ./shots (needs a build; NODEBUG=1 hides the d
 
 ## URL options
 
-- `#city=esperanca` or `#city=tokyo`
-- `#scene=praca-matriz`: pin a scene (`praca-matriz`, `rua-comercio`, `capelinha`, `praca-cultura`, `campo-rodoviaria`, `rain-corner`, `neon-alley`, `konbini`, `shrine`)
+- `#city=esperanca` (also `campina`, `joaopessoa`, `areia`, `remigio`, `tokyo`)
+- `#scene=praca-matriz`: pin a scene (`praca-matriz`, `rua-comercio`, `capelinha`, `praca-cultura`, `campo-rodoviaria`, `acude-velho`, `cabo-branco`, `centro-areia`, `lagoa-remigio`, `rain-corner`, `neon-alley`, `konbini`, `shrine`)
 - `#at=2026-12-24T22:00`: freeze a moment in the city's time zone (for testing; the UI always uses real time)
 - `#wx=rain`: force the weather (`clear`, `cloudy`, `rain`, `snow`, `storm`, `fog`)
 - `#car=bus`: make most Esperança traffic one kind, for previews (`moto`, `hatch`, `sedan`, `suv`, `pickup`, `veraneio`, `kombi`, `som`, `pipa`, `carroca`, `bus`, `micro`, `escolar`)
