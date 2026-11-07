@@ -1,0 +1,61 @@
+/* Seasonal trees: a canopy built from overlapping circles, recoloured each frame
+   from the season (bare winter branches, sakura bloom, summer green, momiji red),
+   with snow settling on the canopy top and on bare branches. */
+import { put, rect } from '../engine/gfx';
+import { bay, type Rng } from '../engine/math';
+import { BARK, LEAF1, LEAF2, LEAFG, LEAFGD, MOMIJI, PETAL, SAKURA, SAKURAD, SNOW } from '../engine/palette';
+import { S } from '../sky/state';
+
+export type TreeKind = 'street' | 'sakura' | 'maple' | 'pine';
+export interface Tree { kind: TreeKind; px: number[]; branches: number[][]; trunk: number[] }
+
+/** cx = trunk centre, gy = ground row, s = scale (1 ≈ 50 px tall). */
+export function makeTree(cx: number, gy: number, s: number, rng: Rng, kind: TreeKind = 'street'): Tree {
+  const top = gy - Math.round(58 * s);
+  const circles = kind === 'pine'
+    ? [[0, 6, 9], [-9, 14, 8], [9, 15, 8], [0, 20, 11], [-14, 24, 7], [14, 25, 7], [0, -2, 6]]
+    : [[0, 6, 13], [-12, 14, 10], [12, 14, 11], [-4, 19, 9], [6, -1, 8], [-16, 20, 6], [17, 20, 6]];
+  const C = circles.map(([dx, dy, r]) => [cx + dx * s, top + dy * s, r * s]);
+  const inside = (x: number, y: number) => C.some(([X, Y, r]) => (x - X) ** 2 + (y - Y) ** 2 <= r * r);
+  const px: number[] = [];
+  for (let y = Math.floor(top - 12 * s); y < gy - 18 * s; y++)
+    for (let x = Math.floor(cx - 30 * s); x < cx + 30 * s; x++) {
+      if (!inside(x, y)) continue;
+      const shade = (y - top - 8 * s) / (10 * s) + (x - cx + 4) / (30 * s) + bay(x, y) * 0.8 > 0.9 ? 1 : 0;
+      px.push(x, y, rng(), rng(), shade, inside(x, y - 1) ? 0 : 1, rng());
+    }
+  const b = (a: number, c: number, d: number, e: number) => [cx + a * s, gy + c * s, cx + d * s, gy + e * s];
+  const branches = [b(0, -39, -12, -53), b(1, -41, 13, -55), b(0, -43, 0, -65), b(-8, -49, -18, -48), b(10, -51, 19, -49), b(0, -55, -6, -65), b(4, -57, 10, -67)];
+  return { kind, px, branches, trunk: [Math.round(cx - 1 * s), Math.round(gy - 43 * s), Math.max(2, Math.round(3 * s)), Math.round(43 * s)] };
+}
+
+function line(x0: number, y0: number, x1: number, y1: number, snowTop: boolean) {
+  const n = Math.max(1, Math.round(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
+  for (let i = 0; i <= n; i++) {
+    const x = Math.round(x0 + ((x1 - x0) * i) / n), y = Math.round(y0 + ((y1 - y0) * i) / n);
+    put(x, y, BARK);
+    if (snowTop && bay(x, y) < S.snowCover) put(x, y - 1, SNOW);
+  }
+}
+
+export function drawTree(t: Tree) {
+  const cov = S.snowCover;
+  let { density, pink, red } = S.tree;
+  if (t.kind === 'pine') { density = 1; pink = 0; red = 0; }
+  if (t.kind === 'maple') red = Math.min(1, red * 1.3);
+  if (t.kind !== 'sakura') pink = 0;
+  const [tx, ty, tw, th] = t.trunk;
+  rect(tx, ty, tw, th, BARK);
+  if (t.kind !== 'pine') for (const [a, b, c, d] of t.branches) line(a, b, c, d, density < 0.3 && cov > 0.15);
+  const px = t.px;
+  for (let i = 0; i < px.length; i += 7) {
+    if (px[i + 2] >= density) continue;
+    const pk = px[i + 3], sh = px[i + 4], tex = px[i + 6];
+    let c: number;
+    if (pk < pink) c = sh ? (tex < 0.25 ? SAKURA : SAKURAD) : tex < 0.2 ? PETAL : tex < 0.3 ? SAKURAD : SAKURA;
+    else if (pk < red) c = sh ? (tex < 0.5 ? LEAF1 : MOMIJI) : tex < 0.3 ? LEAF2 : tex < 0.45 ? LEAF1 : MOMIJI;
+    else c = t.kind === 'pine' ? (sh || tex < 0.3 ? LEAFGD : LEAFG) : sh ? (tex < 0.2 ? LEAFG : LEAFGD) : tex < 0.25 ? LEAFGD : LEAFG;
+    if (px[i + 5] && cov > 0.1 && bay(px[i], px[i + 1]) < cov) c = SNOW;
+    put(px[i], px[i + 1], c);
+  }
+}

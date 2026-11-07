@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#05040b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>LoFi City</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" media="print" onload="this.media='all'">
+</head>
+<body>
+  <canvas id="view" aria-label="Animação em pixel art de uma cidade lo-fi que segue o horário e o clima reais"></canvas>
+
+  <div class="hud ui">
+    <label class="city"><span class="sr">Cidade</span><select id="city" title="Trocar cidade (T)"></select></label>
+    <span class="clock"><span id="clock">--:--</span><span class="temp" id="temp"></span></span>
+    <span class="sub" id="date"></span>
+    <span class="sub"><span class="live" id="live" hidden title="Clima em tempo real (Open-Meteo)">● ao vivo</span> <span id="wx"></span></span>
+    <span class="sub" id="season"></span>
+    <span class="hint" id="hint">toque ou mexa o mouse para os controles · R rádio · D detalhes</span>
+  </div>
+
+  <div class="radio" id="radio"></div>
+
+  <div class="bar ui" role="toolbar" aria-label="Controles da cena">
+    <button id="b-sound" aria-pressed="false" title="Som ambiente: chuva, vento, grilos (M)">Ambiente</button>
+    <button id="b-window" aria-pressed="false" title="Chuva no vidro (W)">Janela</button>
+    <button id="b-crt" aria-pressed="false" title="Efeito CRT (C)">CRT</button>
+    <button id="b-scene" title="Próximo cenário (S)">Cenário</button>
+    <button id="b-info" aria-pressed="false" title="Detalhes técnicos (D)">Info</button>
+    <button id="b-full" title="Tela cheia (Enter)">Tela cheia</button>
+  </div>
+
+  <div id="debug" hidden></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
