@@ -46,6 +46,10 @@ T cidade, S cenário, R rádio, N próxima faixa, P estação, M som ambiente, W
   - Rádio Vaporwave: lançamentos de netlabels como Enough Records, Section 27, Internet Daemon e outros (CC BY-NC-ND / BY-NC-SA / BY-SA).
   - As músicas **não** fazem parte deste repositório nem da licença MIT; as licenças NC proíbem uso comercial.
 
+## Privacidade
+
+O site publicado usa [Vercel Web Analytics](https://vercel.com/docs/analytics) e [Speed Insights](https://vercel.com/docs/speed-insights): sem cookies, só contagem de visitas por cidade (`/tokyo`, `/esperanca`) e métricas de desempenho. Rodando localmente, nada é enviado.
+
 ## Licença
 
 Código sob [MIT](LICENSE).

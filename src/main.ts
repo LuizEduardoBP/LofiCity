@@ -12,6 +12,8 @@ import { CITIES, type City, cityById } from './sky/cities';
 import { followLive, liveNow } from './sky/live';
 import { updateSky } from './scenes/common';
 import { nextScene, pickScene } from './scenes';
+import { inject, pageview } from '@vercel/analytics';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
 const $ = (id: string) => document.getElementById(id)!;
 const params = new URLSearchParams(location.hash.slice(1));
@@ -33,6 +35,11 @@ function pinMoment() {
 pinMoment();
 const simNow = () => Date.now() + simOffset;
 followLive(city);
+
+// ---------- analytics (Vercel, Hobby plan: page views + Web Vitals, cookieless) ----------
+// Page views are reported as /tokyo or /esperanca so the dashboard shows which city people watch.
+inject({ beforeSend: (e) => ({ ...e, url: `${location.origin}/${city.id}` }) });
+injectSpeedInsights();
 
 // ---------- frame + scene ----------
 initPost();
@@ -112,6 +119,7 @@ function setCity(id: string) {
   settle(simNow(), city); direct(simNow(), city, 0);
   scene = pickScene(city.id); scene.build();
   updateHud();
+  pageview({ route: '/[city]', path: `/${city.id}` });
 }
 const actions: Record<string, () => void> = {
   sound: () => press('b-sound', audio.toggle()),
