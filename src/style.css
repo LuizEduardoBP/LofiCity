@@ -82,7 +82,8 @@ body.idle { cursor: none; }
 body.idle .radio { background: transparent; border-color: transparent; pointer-events: none; }
 body.idle .radio .ctl { opacity: 0; }
 body.idle .radio:not(.playing) { opacity: 0; }
-@media (max-width: 600px) { .radio { bottom: calc(env(safe-area-inset-bottom, 0px) + 100px); } }
+/* on narrow screens the bottom of the frame is the scene; the sky under the HUD is free */
+@media (max-width: 600px) { .radio { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 196px); } }
 .radio .lic { color: var(--muted); font-size: 9px; opacity: 0.75; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: none; }
 .radio .lic:hover { text-decoration: underline; opacity: 1; }
 .radio .track { text-transform: none; }

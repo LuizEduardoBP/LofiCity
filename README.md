@@ -7,7 +7,12 @@ Lo-fi pixel-art scenes that follow each city's **real clock** and **live weather
 **Cities**
 
 - **Tokyo** (default): `Esquina da chuva` (rain corner), `Beco neon` (neon alley), `Rua do konbini` (konbini street), `Santuário` (shrine). Japanese seasons: sakura, tsuyu, momiji, year-end snow, hanabi.
-- **Esperança, Paraíba, Brazil** (Brasília time): `Praça da Matriz`, the square in front of the Nossa Senhora do Bom Conselho church, and `Rua do Comércio`, the main shopping street. Local calendar: the patron saint's festival in January, São João in June, Christmas.
+- **Esperança, Paraíba, Brazil** (Brasília time). Local calendar: the patron saint's festival in January, Holy Week, São João in June, Christmas.
+  - `Praça da Matriz`: the square in front of the Nossa Senhora do Bom Conselho church.
+  - `Rua do Comércio`: the main shopping street, with a bar that puts its tables out at night.
+  - `Capelinha das Pedras`: the tiny 1925 chapel on the Lajedo do Araçá rock, beside the pool that mirrors it.
+  - `Praça da Cultura`: the town's postcard square, with the "EU ♥ ESPERANÇA" letters, craft fairs and the Paixão de Cristo in Holy Week.
+  - `Campo da Rodoviária`: the dirt football pitch by the bus station; pickup games, weekend matches with a crowd, buses coming and going.
 
 Everything is drawn in code, with no image assets: an indexed framebuffer whose palette is graded for day, night, sunset and overcast skies.
 
@@ -17,13 +22,13 @@ Everything is drawn in code, with no image assets: an indexed framebuffer whose 
 pnpm install
 pnpm dev        # http://localhost:5173
 pnpm build      # dist/index.html, a single self-contained file
-pnpm shot       # screenshots into ./shots (needs a build)
+pnpm shot       # screenshots into ./shots (needs a build; NODEBUG=1 hides the debug panel)
 ```
 
 ## URL options
 
 - `#city=esperanca` or `#city=tokyo`
-- `#scene=praca-matriz`: pin a scene (`praca-matriz`, `rua-comercio`, `rain-corner`, `neon-alley`, `konbini`, `shrine`)
+- `#scene=praca-matriz`: pin a scene (`praca-matriz`, `rua-comercio`, `capelinha`, `praca-cultura`, `campo-rodoviaria`, `rain-corner`, `neon-alley`, `konbini`, `shrine`)
 - `#at=2026-12-24T22:00`: freeze a moment in the city's time zone (for testing; the UI always uses real time)
 - `#wx=rain`: force the weather (`clear`, `cloudy`, `rain`, `snow`, `storm`, `fog`)
 

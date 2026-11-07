@@ -38,8 +38,11 @@ followLive(city);
 
 // ---------- analytics (Vercel, Hobby plan: page views + Web Vitals, cookieless) ----------
 // Page views are reported as /tokyo or /esperanca so the dashboard shows which city people watch.
-inject({ beforeSend: (e) => ({ ...e, url: `${location.origin}/${city.id}` }) });
-injectSpeedInsights();
+const hosted = location.protocol === 'https:' && !/^(localhost|127\.)/.test(location.hostname);
+if (hosted) {
+  inject({ beforeSend: (e) => ({ ...e, url: `${location.origin}/${city.id}` }) });
+  injectSpeedInsights();
+}
 
 // ---------- frame + scene ----------
 initPost();
@@ -119,7 +122,7 @@ function setCity(id: string) {
   settle(simNow(), city); direct(simNow(), city, 0);
   scene = pickScene(city.id); scene.build();
   updateHud();
-  pageview({ route: '/[city]', path: `/${city.id}` });
+  if (hosted) pageview({ route: '/[city]', path: `/${city.id}` });
 }
 const actions: Record<string, () => void> = {
   sound: () => press('b-sound', audio.toggle()),

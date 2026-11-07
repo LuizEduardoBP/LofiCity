@@ -5,7 +5,7 @@ import { L, Lp, type Layer, getW, put, rect, sx, sy } from '../engine/gfx';
 import { bay, type Rng } from '../engine/math';
 import {
   AMB, AMBD, BARK, BMID, BNEAR, CBEIGE, CBLUE, CGREEN, CRED, CYELL, FOG, HALO, HALOOK, LEAFG, LEAFGD,
-  LEDW, LIGHT, STEEL, STONE, STONEL, VOID, WCOOL, WDIM, WHITE, WOOD, WWARM, FPINK,
+  LEDW, LIGHT, STEEL, STONE, STONEL, TILEW, VOID, WCOOL, WDIM, WHITE, WOOD, WWARM, FPINK,
 } from '../engine/palette';
 import { S } from '../sky/state';
 
@@ -23,6 +23,8 @@ export type Plat = 'reta' | 'deco' | 'frontao' | 'escada' | 'balaustre';
  */
 export function casa(ly: Layer, x: number, w: number, h: number, ground: number, wall: number, trim: number, plat: Plat, shop: boolean, rng: Rng): Opening[] {
   const top = ground - h, out: Opening[] = [];
+  if (trim === WHITE) trim = TILEW; // painted white walls darken at night; WHITE itself is a light source
+  if (wall === WHITE) wall = TILEW;
   L(ly, x, top, w, h, wall);
   L(ly, x, ground - 3, w, 3, trim); // barrado
   // platibanda
@@ -238,3 +240,33 @@ export function fogueira(x: number, ground: number) {
 }
 
 export const isNight = night;
+
+// ---------- 3x5 pixel font (signs, letreiros) ----------
+const FONT: Record<string, string> = {
+  A: '010101111101101', B: '110101110101110', C: '011100100100011', D: '110101101101110', E: '111100110100111',
+  F: '111100110100100', G: '011100101101011', H: '101101111101101', I: '111010010010111', J: '001001001101010', K: '101101110101101',
+  L: '100100100100111', M: '101111111101101', N: '110101101101101', O: '010101101101010', P: '110101110100100',
+  R: '110101110101101', S: '011100010001110', T: '111010010010010', U: '101101101101111', V: '101101101101010',
+  Z: '111001010100111', 'Ç': '011100100100011', '♥': '000101111111010', ' ': '000000000000000',
+};
+/** Draw text into a layer (`ly`) or, with ly = null, straight into the frame; `s` scales each pixel. */
+export function text(ly: Layer | null, str: string, x: number, y: number, c: number, s = 1, heart = c) {
+  for (const ch of str) {
+    const g = FONT[ch] ?? FONT[' '], col = ch === '♥' ? heart : c;
+    for (let j = 0; j < 5; j++) for (let i = 0; i < 3; i++) if (g[j * 3 + i] === '1') {
+      if (ly) L(ly, x + i * s, y + j * s, s, s, col); else rect(x + i * s, y + j * s, s, s, col);
+    }
+    if (ch === 'Ç') { if (ly) L(ly, x + s, y + 5 * s, s, s, c); else rect(x + s, y + 5 * s, s, s, c); }
+    x += 4 * s;
+  }
+}
+export const textW = (str: string, s = 1) => (str.length * 4 - 1) * s;
+
+/** Easter Sunday (Gregorian), as a day of year; Holy Week events key off it. */
+export function easterDoy(year: number): number {
+  const a = year % 19, b = Math.floor(year / 100), c = year % 100, d = Math.floor(b / 4), e = b % 4;
+  const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+  return Math.floor((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 1)) / 864e5);
+}

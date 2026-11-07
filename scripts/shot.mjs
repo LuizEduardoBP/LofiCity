@@ -28,7 +28,7 @@ for (const [name, at, w, h, extra = ''] of cases) {
   p.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.text()); });
   await p.goto(`${page}#at=${at}&${extra.includes('scene=') ? '' : 'scene=rain-corner&'}${extra}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
   await p.waitForTimeout(Number(process.env.WAIT ?? 2500));
-  await p.keyboard.press('d');
+  if (!process.env.NODEBUG) await p.keyboard.press('d');
   await p.waitForTimeout(400);
   await p.screenshot({ path: `shots/${name}.png` });
   console.log(name, errors.length ? 'ERRORS: ' + errors.join(' | ') : 'ok');

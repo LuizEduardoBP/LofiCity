@@ -2,7 +2,7 @@
    furniture shop the town is known for, a pharmacy with its green cross, the bakery that
    opens before dawn, a bar with plastic tables on the sidewalk at night, a sobrado with
    lit windows, motorcycles parked at the curb, and the Matriz tower over the rooftops. */
-import { L, Lp, type Layer, WW, blitLayer, getW, newLayer, put, rect, sx, sy } from '../engine/gfx';
+import { L, WW, blitLayer, getW, newLayer, put, rect, sx, sy } from '../engine/gfx';
 import { bay, mulberry32 } from '../engine/math';
 import {
   AMB, AMBD, ASPH, BFAR, BNEAR, CBLUE, CHURCH, CHURCHD, CRED, CYELL, FBLUE, FGREEN, FLILAC, FORNG, FPINK, FWG,
@@ -16,7 +16,7 @@ import { S, hourIn } from '../sky/state';
 import { drawFog, drawSky, drawStreet, type Street } from './common';
 import {
   type Lamp, type Opening, type Plat, bandeirolas, bulbs, cart, casa, christmasStar, drawOpenings, isNight, lampLight,
-  lampPost, pole, wire,
+  lampPost, pole, text, textW, wire,
 } from './br-kit';
 import type { Scene } from './types';
 
@@ -26,22 +26,6 @@ const far = newLayer(), mid = newLayer(), front = newLayer();
 const street: Street = { y0: STREET, base: new Uint8Array(SH * WW), pud: new Uint8Array(SH * WW), jit: precip.jit };
 const farWins: { x: number; y: number; rank: number }[] = [];
 const LAMPS: Lamp[] = [{ x: 126, top: 74, ground: 140, arms: 1 }, { x: 352, top: 74, ground: 140, arms: 1 }];
-
-// ---------- 3x5 pixel font for shop signs ----------
-const FONT: Record<string, string> = {
-  A: '010101111101101', B: '110101110101110', C: '011100100100011', D: '110101101101110', E: '111100110100111',
-  F: '111100110100100', H: '101101111101101', I: '111010010010111', L: '100100100100111', M: '101111111101101',
-  N: '110101101101101', O: '010101101101010', P: '110101110100100', R: '110101110101101', S: '011100010001110',
-  T: '111010010010010', V: '101101101101010', Z: '111001010100111', K: '101101110101101', ' ': '000000000000000',
-};
-function text(ly: Layer, s: string, x: number, y: number, c: number) {
-  for (const ch of s) {
-    const g = FONT[ch] ?? FONT[' '];
-    for (let j = 0; j < 5; j++) for (let i = 0; i < 3; i++) if (g[j * 3 + i] === '1') Lp(ly, x + i, y + j, c);
-    x += 4;
-  }
-}
-const textW = (s: string) => s.length * 4 - 1;
 
 // ---------- buildings ----------
 interface Bld { x: number; w: number; h: number; wall: number; trim: number; plat: Plat; shop: boolean; sign?: string; signBg?: number; signFg?: number; hours?: [number, number]; upper?: boolean }
