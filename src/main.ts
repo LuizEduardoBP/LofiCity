@@ -90,7 +90,9 @@ function weatherWord(): string {
 function seasonWord(): string {
   const m = S.cal.month;
   if (city.br) {
-    const tags = [city.climate === 'litoral' ? (m >= 3 && m <= 7 ? 'inverno chuvoso' : 'verão') : m >= 2 && m <= 6 ? 'quadra chuvosa' : 'estação seca'];
+    const tags: string[] = [];
+    if (city.climate === 'litoral') tags.push(m >= 3 && m <= 7 ? 'inverno chuvoso' : 'verão');
+    else if (m >= 2 && m <= 6) tags.push('quadra chuvosa');
     if (S.festa) tags.push(S.procissao ? 'procissão' : 'festa da padroeira');
     if (S.saoJoao) tags.push('são joão');
     if (S.natal && !S.festa) tags.push('natal');
