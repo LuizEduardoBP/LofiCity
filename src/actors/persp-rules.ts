@@ -20,13 +20,19 @@ export interface DepthRoad {
   /** Distance from the stop line to the stripes, metres. */
   stopGap: number;
   crossing?: DepthCrossing | null;
+  /** If set, the street is one-way in that direction (+1 away from the viewer, -1 oncoming). */
+  oneWay?: 1 | -1;
 }
 
 /** Leading edge of a vehicle along its direction of travel. */
 export const frontZ = (c: DepthCar) => c.z + (c.dir * c.len) / 2;
 
+/** Direction for a newly spawned vehicle on `road` (`r` in [0, 1)). */
+export const pickDir = (road: DepthRoad, r: number): 1 | -1 => road.oneWay ?? (r < 0.5 ? 1 : -1);
+
 /** Whether a new vehicle heading `dir` fits at its entry point (no one within a car length and gap). */
 export function canEnter(cars: readonly DepthCar[], dir: 1 | -1, len: number, road: DepthRoad): boolean {
+  if (road.oneWay && dir !== road.oneWay) return false;
   const z = dir > 0 ? road.zNear : road.zFar;
   return !cars.some((o) => o.on && o.dir === dir && Math.abs(o.z - z) < (o.len + len) / 2 + road.gap + 1);
 }

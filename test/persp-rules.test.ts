@@ -1,7 +1,7 @@
 // Run with `pnpm test` (node --test; Node >= 22.18 strips the TypeScript types natively).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { type DepthCar, type DepthRoad, canEnter, carsOnCrossing, frontZ, stepDepthCars } from '../src/actors/persp-rules.ts';
+import { type DepthCar, type DepthRoad, canEnter, carsOnCrossing, frontZ, pickDir, stepDepthCars } from '../src/actors/persp-rules.ts';
 
 // Rua Faustino Porto's zebra: stripes from 10.3 m to 15.5 m, stop lines 1.2 m out.
 const road = (occupied: boolean, crossing = true): DepthRoad => ({
@@ -82,4 +82,14 @@ test('a new vehicle cannot enter on top of another one', () => {
   assert.equal(canEnter([car(r.zNear + 1, 1)], 1, 4.2, r), false);
   assert.equal(canEnter([car(r.zNear + 1, 1)], -1, 4.2, r), true);
   assert.equal(canEnter([car(r.zNear + 12, 1)], 1, 4.2, r), true);
+});
+
+test('a one-way depth road only spawns and admits vehicles in its declared direction', () => {
+  const r: DepthRoad = { zNear: 3, zFar: 135, gap: 1.6, stopGap: 1.2, crossing: null, oneWay: 1 };
+  for (const u of [0, 0.25, 0.5, 0.75, 0.99]) assert.equal(pickDir(r, u), 1);
+  assert.equal(canEnter([], 1, 4.2, r), true);
+  assert.equal(canEnter([], -1, 4.2, r), false);
+  const v = car(r.zNear, 1, 4.2, 8);
+  for (let i = 0; i < 60; i++) stepDepthCars([v], 1 / 30, r);
+  assert.ok(v.z > r.zNear + 10, 'drove away from the camera');
 });

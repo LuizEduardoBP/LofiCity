@@ -54,6 +54,7 @@ export const PHRASES: Phrase[] = [
   ...group({ scene: 'centro-teatro' }, ['Bora dar uma volta no centro?', 'Vou encontrar os amigos ali.']),
   ...group({ scene: 'rua-faustino' }, ['Essa rua é tranquila, viu?', 'Vou visitar minha vó aqui perto.']),
   ...group({ scene: 'rua-jose-bezerra' }, ['Rua de vizinho bom é assim.', 'Tô indo levar um bolo pra vizinha.']),
+  ...group({ scene: 'rua-epitacio-pessoa' }, ['Subindo a Epitácio Pessoa.', 'Esse trecho da BR-104 não para!', 'Vou ali resolver um negócio na rua.']),
 
   // ---------- Capelinha das Pedras: only its visitors, the priest and the congregation ----------
   ...group({ scene: 'capelinha', who: ['visitor'] }, ['Que vista lá de cima!', 'Vou tirar uma foto da Capelinha.', 'Essa capelinha é um encanto.', 'Subir até aqui valeu a pena!', 'Que pedra enorme, né?']),

@@ -12,7 +12,7 @@ import {
   AMBD, BMID, BNEAR, CBEIGE, CBLUE, CGREEN, CNAVY, CRED, CYELL, HAIR1, HAIR2, HAIR3, HALO, HALOOK, LEDW, MAG, MAGD,
   SKIN1, SKIN2, SKIN3, SKIN4, STEEL, STONE, STONEL, TILEW, VOID, WCOOL, WDIM, WHITE, WWARM, LIGHT, FGREEN, FPINK,
 } from '../engine/palette';
-import { type DepthCar, type DepthRoad, canEnter, stepDepthCars } from '../actors/persp-rules';
+import { type DepthCar, type DepthRoad, canEnter, pickDir, stepDepthCars } from '../actors/persp-rules';
 import { peopleCap } from '../sky/rhythm';
 import { S } from '../sky/state';
 import { isNight } from './br-kit';
@@ -157,7 +157,7 @@ export const NO_HELMET = 255;
 export function spawnCar(cars: PCar[], road: DepthRoad, laneX: (dir: 1 | -1) => number, buses = true) {
   const c = cars.find((o) => !o.on);
   if (!c) return;
-  const dir: 1 | -1 = rr() < 0.5 ? 1 : -1, k = rr(), h = S.cal.hour;
+  const dir = pickDir(road, rr()), k = rr(), h = S.cal.hour;
   const kind: PKind = k < 0.48 ? 'moto' : k < 0.82 ? 'car' : k < 0.93 ? 'pickup' : k < 0.97 || !buses || h < 6 || h > 22 ? 'van' : 'bus';
   if (!canEnter(cars, dir, LEN[kind], road)) return;
   c.kind = kind; c.len = LEN[kind]; c.dir = dir; c.X = laneX(dir);

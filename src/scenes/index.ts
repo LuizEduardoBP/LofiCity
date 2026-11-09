@@ -17,6 +17,7 @@ import { pracaCultura } from './praca-cultura';
 import { praca } from './praca-matriz';
 import { rainCorner } from './rain-corner';
 import { ruaComercio } from './rua-comercio';
+import { ruaEpitacioPessoa } from './rua-epitacio-pessoa';
 import { ruaFaustino } from './rua-faustino';
 import { ruaJoseBezerra } from './rua-jose-bezerra';
 import { shrine } from './shrine';
@@ -25,7 +26,7 @@ import type { Scene } from './types';
 
 export const SCENES: Record<CityId, Scene[]> = {
   tokyo: [rainCorner, neonAlley, konbini, shrine],
-  esperanca: [praca, ruaComercio, capelinha, pracaCultura, campoRodoviaria, centroTeatro, armazemParaiba, ruaFaustino, ruaJoseBezerra],
+  esperanca: [praca, ruaComercio, capelinha, pracaCultura, campoRodoviaria, centroTeatro, armazemParaiba, ruaFaustino, ruaJoseBezerra, ruaEpitacioPessoa],
   campina: [acudeVelho, piramide, estacaoVelha, parqueCrianca, partage, terminalIntegracao],
   joaopessoa: [caboBranco],
   areia: [centroAreia],

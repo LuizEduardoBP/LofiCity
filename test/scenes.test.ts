@@ -19,19 +19,19 @@ const sceneId = (name: string) => {
   assert.ok(m && m[1] === name, `${name} declares its id`);
   return m![2];
 };
-const NEW = ['centro-teatro', 'armazem-paraiba', 'rua-faustino', 'rua-jose-bezerra'];
+const NEW = ['centro-teatro', 'armazem-paraiba', 'rua-faustino', 'rua-jose-bezerra', 'rua-epitacio-pessoa'];
 
 test('every scene id in SCENES is unique', () => {
   const ids = [...table.values()].flat().map(sceneId);
-  assert.ok(ids.length >= 22);
+  assert.ok(ids.length >= 23);
   assert.equal(new Set(ids).size, ids.length, `duplicate ids: ${ids}`);
 });
 
-test('Esperança has the four new scenes after the existing five', () => {
+test('Esperança has the five newer scenes after the existing five', () => {
   const ids = table.get('esperanca')!.map(sceneId);
   assert.deepEqual(ids.slice(0, 5), ['praca-matriz', 'rua-comercio', 'capelinha', 'praca-cultura', 'campo-rodoviaria']);
   for (const id of NEW) assert.ok(ids.includes(id), `${id} registered`);
-  assert.equal(ids.length, 9);
+  assert.equal(ids.length, 10);
 });
 
 test('the developer guide lists each new #scene id', () => {
@@ -54,6 +54,8 @@ test('only scenes whose photo shows a zebra wire up a crossing', () => {
   assert.doesNotMatch(src('armazem-paraiba'), /setBrCrossing|crossing:/);
   assert.match(src('rua-jose-bezerra'), /crossing: null/);
   assert.doesNotMatch(src('rua-jose-bezerra'), /yieldLimit|setBrCrossing/);
+  assert.match(src('rua-epitacio-pessoa'), /crossing: null,\s*oneWay: 1/);
+  assert.doesNotMatch(src('rua-epitacio-pessoa'), /yieldLimit|setBrCrossing|zebraBusyP/);
   // no random weather anywhere in the new scenes
   for (const id of NEW) assert.doesNotMatch(src(id), /S\.(rain|snow|storm|cloud|fog|temp)\s*=[^=]/);
 });
