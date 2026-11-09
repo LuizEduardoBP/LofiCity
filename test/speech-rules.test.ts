@@ -8,7 +8,7 @@ import {
 import { PHRASES } from '../src/actors/phrases.ts';
 
 const SCENES = {
-  esperanca: ['praca-matriz', 'rua-comercio', 'capelinha', 'praca-cultura', 'campo-rodoviaria', 'centro-teatro', 'armazem-paraiba', 'rua-faustino', 'rua-jose-bezerra', 'rua-manoel-rodrigues'],
+  esperanca: ['praca-matriz', 'rua-comercio', 'capelinha', 'praca-cultura', 'campo-rodoviaria', 'centro-teatro', 'armazem-paraiba', 'rua-faustino', 'rua-jose-bezerra', 'rua-manoel-rodrigues', 'rua-epitacio-pessoa'],
   campina: ['acude-velho', 'piramide-parque-do-povo', 'estacao-velha', 'parque-da-crianca', 'partage-shopping', 'terminal-integracao'],
   joaopessoa: ['cabo-branco'], areia: ['centro-areia'], remigio: ['lagoa-remigio', 'cinema-remigio', 'cinema-fachada-remigio'],
   tokyo: ['rain-corner', 'neon-alley', 'konbini', 'shrine'],
@@ -19,7 +19,7 @@ const HOURS = [1, 3, 6, 9, 11.5, 13, 16, 19, 22, 23.9];
 const KINDS = ['live', 'stale', 'unavailable', 'override'] as const;
 const WX_ID = new Set(PHRASES.filter((p) => p.wx).map((p) => p.t));
 const wxOf = (tag: string) => new Set(PHRASES.filter((p) => p.wx === tag).map((p) => p.t));
-const ctx = (o: Partial<SpeechCtx> & { wx?: Partial<WxCtx> } = {}): SpeechCtx => ({
+const ctx = (o: Partial<Omit<SpeechCtx, 'wx'>> & { wx?: Partial<WxCtx> } = {}): SpeechCtx => ({
   city: 'esperanca', scene: 'praca-matriz', hour: 10, role: 'passerby', ...o,
   wx: { kind: 'live', temp: 25, rain: 0, snow: 0, ...o.wx },
 });

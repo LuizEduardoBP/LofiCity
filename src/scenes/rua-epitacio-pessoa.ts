@@ -424,7 +424,8 @@ function buildGround() {
 const CARS: PCar[] = makeCars(7);
 const WALKERS: Walker[] = makeWalkers(8);
 // One-way road away from the viewer (+1), no zebra crossing.
-const ROAD: DepthRoad = { zNear: 3, zFar: 135, gap: 1.6, stopGap: 1.2, crossing: null, oneWay: 1 };
+const ONE_WAY = 1 as const;
+const ROAD: DepthRoad = { zNear: 3, zFar: 135, gap: 1.6, stopGap: 1.2, crossing: null };
 const laneX = () => 0.8;
 const WALK: WalkCfg = {
   walks: [
@@ -449,7 +450,7 @@ const PARKED: Parked[] = [
 
 function update(dt: number) {
   updateAnimals(dt);
-  updateCarsP(CARS, dt, ROAD, laneX);
+  updateCarsP(CARS, dt, ROAD, laneX, 1, ONE_WAY);
   updateWalkers(WALKERS, dt, WALK, () => false, 1);
 }
 
