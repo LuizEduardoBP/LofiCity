@@ -19,7 +19,7 @@ const sceneId = (name: string) => {
   assert.ok(m && m[1] === name, `${name} declares its id`);
   return m![2];
 };
-const NEW = ['centro-teatro', 'armazem-paraiba', 'rua-faustino', 'rua-jose-bezerra', 'rua-epitacio-pessoa'];
+const NEW = ['centro-teatro', 'armazem-paraiba', 'rua-faustino', 'rua-jose-bezerra', 'rua-manoel-rodrigues','rua-epitacio-pessoa'];
 
 test('every scene id in SCENES is unique', () => {
   const ids = [...table.values()].flat().map(sceneId);
@@ -27,11 +27,12 @@ test('every scene id in SCENES is unique', () => {
   assert.equal(new Set(ids).size, ids.length, `duplicate ids: ${ids}`);
 });
 
-test('Esperança has the five newer scenes after the existing five', () => {
+test('Esperança has the new scenes after the existing five', () => {
   const ids = table.get('esperanca')!.map(sceneId);
   assert.deepEqual(ids.slice(0, 5), ['praca-matriz', 'rua-comercio', 'capelinha', 'praca-cultura', 'campo-rodoviaria']);
   for (const id of NEW) assert.ok(ids.includes(id), `${id} registered`);
   assert.equal(ids.length, 10);
+  assert.ok(ids.indexOf('rua-manoel-rodrigues') > ids.indexOf('rua-jose-bezerra'), 'Rua Manoel Rodrigues comes after the earlier streets');
 });
 
 test('the developer guide lists each new #scene id', () => {
@@ -56,6 +57,14 @@ test('only scenes whose photo shows a zebra wire up a crossing', () => {
   assert.doesNotMatch(src('rua-jose-bezerra'), /yieldLimit|setBrCrossing/);
   assert.match(src('rua-epitacio-pessoa'), /crossing: null,\s*oneWay: 1/);
   assert.doesNotMatch(src('rua-epitacio-pessoa'), /yieldLimit|setBrCrossing|zebraBusyP/);
+  // Rua Manoel Rodrigues: the distant zebra and its hanging light are in the photo, so both are wired:
+  // a signalised crossing, pedestrians held to the pedestrian phase, and a one-way road
+  const rmr = src('rua-manoel-rodrigues');
+  assert.match(rmr, /crossing: \{ z0: ZEB\.z0, z1: ZEB\.z1, occupied: false, signal: /);
+  assert.match(rmr, /c\.signal = s\.phase/);
+  assert.match(rmr, /pedestrianMayStart\(sig\(\), CROSS_TIME, SIG_T\)/);
+  assert.match(rmr, /updateCarsP\(CARS, dt, ROAD, laneX, 1, ONE_WAY\)/);
+  assert.match(rmr, /const ONE_WAY = 1 as const/);
   // no random weather anywhere in the new scenes
   for (const id of NEW) assert.doesNotMatch(src(id), /S\.(rain|snow|storm|cloud|fog|temp)\s*=[^=]/);
 });
@@ -77,4 +86,40 @@ test('the new Campina scenes follow the city rhythm and never set the weather', 
     assert.deepEqual(density('campina', id, at), density('campina', 'acude-velho', at));
     assert.doesNotMatch(read(`src/scenes/${id}.ts`), /S\.(rain|snow|storm|cloud|fog|temp|wind)\s*=[^=]/);
   }
+});
+
+test('Remígio has the lagoon first, then the cinema and its street front, listed in the developer guide', () => {
+  assert.deepEqual(table.get('remigio')!.map(sceneId), ['lagoa-remigio', 'cinema-remigio', 'cinema-fachada-remigio']);
+  const line = read('docs/DEVELOPING.md').split('\n').find((l) => l.startsWith('- `#scene='))!;
+  for (const id of ['cinema-remigio', 'cinema-fachada-remigio']) assert.ok(line.includes(`\`${id}\``), `${id} in the #scene list`);
+});
+
+test('the cinema front never sets the weather and shares the room schedule; the doors point at each other', () => {
+  const front = read('src/scenes/cinema-fachada-remigio.ts'), room = read('src/scenes/cinema-remigio.ts');
+  assert.doesNotMatch(front, /S\.(rain|snow|storm|cloud|fog|temp|wind|wet)\s*=[^=]/);
+  assert.doesNotMatch(front, /Math\.random\(/);
+  assert.match(front, /from '\.\/cinema-rules'/, 'board, queue and door come from the shared schedule');
+  assert.doesNotMatch(front, /\b(16\.5|21\.5|BLOCK_MIN)\b/, 'no session times copied into the scene');
+  assert.match(front, /goto: 'cinema-remigio'/);
+  assert.match(room, /goto: 'cinema-fachada-remigio'/);
+  // the zebra is in the photo, so the crossing is wired; the road stays two-way (direction unknown)
+  assert.match(front, /setBrCrossing\(\{/);
+  assert.doesNotMatch(front, /setBrOneWay|setBrSignal/);
+  const at = Date.parse('2026-11-09T14:30-03:00');
+  assert.deepEqual(density('remigio', 'cinema-fachada-remigio', at), density('remigio', 'lagoa-remigio', at));
+});
+
+test('main.ts handles a door: same scene change as the scene button, by id within the city', () => {
+  const main = read('src/main.ts');
+  assert.match(main, /prop\?\.goto \? sceneById\(city\.id, prop\.goto\)/);
+  assert.match(main, /scene: \(\) => enterScene\(nextScene\(city\.id, scene\)\)/);
+  assert.match(main, /function enterScene\(next: Scene\) \{\s*clearBubbles\(\); clearPeople\(\);[^\n]*syncHash\(\);/);
+});
+
+test('the cinema is indoors: it never touches the weather and takes no Math.random', () => {
+  const src = read('src/scenes/cinema-remigio.ts');
+  assert.doesNotMatch(src, /S\.(rain|snow|storm|cloud|fog|temp|wind|wet)\s*=[^=]/);
+  assert.doesNotMatch(src, /Math\.random\(/);
+  assert.doesNotMatch(read('src/scenes/cinema-rules.ts'), /Math\.random\(|from '\.\.\/engine|document\.|window\./);
+  assert.match(src, /grade\(\)/, 'lights itself (grade hook)');
 });

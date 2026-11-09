@@ -4,6 +4,8 @@ import { armazemParaiba } from './armazem-paraiba';
 import { caboBranco } from './cabo-branco';
 import { centroAreia } from './centro-areia';
 import { lagoaRemigio } from './lagoa-remigio';
+import { cinemaRemigio } from './cinema-remigio';
+import { cinemaFachada } from './cinema-fachada-remigio';
 import { campoRodoviaria } from './campo-rodoviaria';
 import { capelinha } from './capelinha';
 import { centroTeatro } from './centro-teatro';
@@ -20,17 +22,18 @@ import { ruaComercio } from './rua-comercio';
 import { ruaEpitacioPessoa } from './rua-epitacio-pessoa';
 import { ruaFaustino } from './rua-faustino';
 import { ruaJoseBezerra } from './rua-jose-bezerra';
+import { ruaManoelRodrigues } from './rua-manoel-rodrigues';
 import { shrine } from './shrine';
 import { terminalIntegracao } from './terminal-integracao';
 import type { Scene } from './types';
 
 export const SCENES: Record<CityId, Scene[]> = {
   tokyo: [rainCorner, neonAlley, konbini, shrine],
-  esperanca: [praca, ruaComercio, capelinha, pracaCultura, campoRodoviaria, centroTeatro, armazemParaiba, ruaFaustino, ruaJoseBezerra, ruaEpitacioPessoa],
+  esperanca: [praca, ruaComercio, capelinha, pracaCultura, campoRodoviaria, centroTeatro, armazemParaiba, ruaFaustino, ruaJoseBezerra, ruaManoelRodrigues, ruaEpitacioPessoa],
   campina: [acudeVelho, piramide, estacaoVelha, parqueCrianca, partage, terminalIntegracao],
   joaopessoa: [caboBranco],
   areia: [centroAreia],
-  remigio: [lagoaRemigio],
+  remigio: [lagoaRemigio, cinemaRemigio, cinemaFachada],
 };
 
 const LAST_KEY = 'loficity:lastScene:';
@@ -48,6 +51,9 @@ export function pickScene(city: CityId): Scene {
   try { localStorage.setItem(LAST_KEY + city, scene.id); } catch { /* storage unavailable */ }
   return scene;
 }
+
+/** A scene of the city by id (a door's `goto`), or null. */
+export const sceneById = (city: CityId, id: string): Scene | null => SCENES[city].find((s) => s.id === id) ?? null;
 
 export function nextScene(city: CityId, current: Scene): Scene {
   const list = SCENES[city];

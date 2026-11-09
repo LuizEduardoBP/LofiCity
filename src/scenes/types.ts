@@ -12,7 +12,22 @@ export interface Scene {
   update(dt: number): void;
   render(): void;
   debug(): string;
+  /** Optional, for indoor scenes that light themselves: called after the global palette grade and
+      may overwrite PAL32 (the sun and the sky do not reach an interior). Post-processing then
+      treats the frame as night (bloom on lit pixels). */
+  grade?(): void;
   /** Optional: a tappable prop or person at world (x, y) — where to show the emote and what to play,
       or, for a person, who speaks (a silent speech bubble instead of a sound). */
-  tap?(x: number, y: number): { x: number; y: number; sfx?: Sfx; speaker?: Speaker } | null;
+  tap?(x: number, y: number): TapResult | null;
+  /** Optional: a short pt-BR hint bubble shown when this scene is reached through another scene's
+      door (a tap result's `goto`), e.g. how to get back out. */
+  hint?(): { x: number; y: number; text: string } | null;
+}
+
+export interface TapResult {
+  x: number; y: number; sfx?: Sfx; speaker?: Speaker;
+  /** A fixed pt-BR line shown in a bubble at (x, y) (e.g. "Fechado, volta às 14h"). */
+  say?: string;
+  /** Walk through a door: switch to this scene id of the same city, at the same moment. */
+  goto?: string;
 }
